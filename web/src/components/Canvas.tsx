@@ -235,6 +235,9 @@ export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, o
         onNodesChange={handleNodesChange}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
+        onNodeClick={(_, node) => {
+          if (node.type === "note") onOpen(node.id);
+        }}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.25, maxZoom: 0.95 }}

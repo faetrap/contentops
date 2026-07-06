@@ -79,6 +79,22 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     res.json({ ...toApiNote(note), operators: operatorsForNote(note).map(toApiOperator) });
   });
 
+  router.patch("/notes/:id", (req, res) => {
+    const note = vault.findById(req.params.id);
+    if (!note) return res.status(404).json({ error: "Note not found" });
+    const { body, summary } = req.body ?? {};
+    if (body !== undefined && typeof body !== "string") {
+      return res.status(400).json({ error: "body must be a string" });
+    }
+    if (summary !== undefined && typeof summary !== "string") {
+      return res.status(400).json({ error: "summary must be a string" });
+    }
+    const frontmatter = { ...note.frontmatter };
+    if (summary !== undefined) frontmatter.summary = summary;
+    vault.writeNote(note.relPath, frontmatter, body !== undefined ? body : note.body);
+    res.json({ ...toApiNote(vault.readNote(note.relPath)!), operators: operatorsForNote(note).map(toApiOperator) });
+  });
+
   router.get("/assets/*", (req, res) => {
     const rel = decodeURIComponent((req.params as Record<string, string>)[0] ?? "");
     try {

@@ -68,6 +68,12 @@ export const api = {
       body: JSON.stringify(patch),
     }).then((r) => handle<CanvasState>(r)),
   note: (id: string) => fetch(`/api/notes/${id}`).then((r) => handle<ApiNote>(r)),
+  updateNote: (id: string, patch: { body?: string; summary?: string }) =>
+    fetch(`/api/notes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }).then((r) => handle<ApiNote>(r)),
   capture: (text: string, image: File | null) => {
     const form = new FormData();
     form.set("text", text);

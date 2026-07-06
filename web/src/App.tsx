@@ -115,6 +115,10 @@ export default function App() {
           onClose={() => setSelectedId(null)}
           onRunOperator={runOperator}
           runningOp={runningOp}
+          onSaved={() => {
+            refresh();
+            showToast({ text: "Saved to your vault." });
+          }}
         />
       )}
 

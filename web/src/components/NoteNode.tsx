@@ -39,7 +39,7 @@ export function NoteNode({ data }: NodeProps) {
     <div
       className={`node ${isOutput ? "node-output" : "node-input"} node-${fm.status}`}
       onDoubleClick={() => onOpen(note.id)}
-      title="Double-click to open · drag from the right edge into an operator to feed it"
+      title="Click to open & edit · drag from the right edge into an operator to feed it"
     >
       <div className="node-head">
         <span className="node-icon">{TYPE_ICON[fm.type] ?? "•"}</span>
