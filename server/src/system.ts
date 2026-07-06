@@ -35,3 +35,30 @@ export function antiDriftRule(): string {
   if (idx === -1) return "";
   return `=== ANTI-DRIFT CONSTITUTION (hard rules) ===\n\n${readme.slice(idx).trim()}`;
 }
+
+/** Parse system/tags.md into { aesthetic: [...], mood: [...], themes: [...] }. */
+export function loadTagVocab(): Record<string, string[]> {
+  const doc = read("tags.md");
+  const vocab: Record<string, string[]> = {};
+  let current: string | null = null;
+  for (const line of doc.split("\n")) {
+    const heading = line.match(/^##\s+(.+)$/);
+    if (heading) {
+      current = heading[1].trim().toLowerCase();
+      vocab[current] = [];
+      continue;
+    }
+    const item = line.match(/^-\s+(.+)$/);
+    if (current && item) vocab[current].push(item[1].trim());
+  }
+  return vocab;
+}
+
+/** Pillar names parsed from content.md §1 (single source of truth). */
+export function loadPillars(): string[] {
+  const doc = read("content.md");
+  const pillars = [...doc.matchAll(/^\d+\.\s+\*\*(.+?)\*\*/gm)].map((m) => m[1].trim());
+  return pillars.length >= 3
+    ? pillars.slice(0, 5)
+    : ["The Body as Teacher", "Stillness & the Inner Weather", "Feminine Strength & Capacity", "Mysticism & Meaning", "Aesthetic Living"];
+}

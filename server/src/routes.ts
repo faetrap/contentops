@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { ClaudeAuthError, ClaudeOutputError, runClaudeJSON } from "./claude.js";
 import type { AppConfig } from "./config.js";
 import { allOperators, feedableOperators, getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
-import { antiDriftRule, systemContext } from "./system.js";
+import { antiDriftRule, loadPillars, loadTagVocab, systemContext } from "./system.js";
 import { LayoutStore } from "./layout.js";
 import { WEB_DIST } from "./config.js";
 import { FOLDERS, type Note, type Vault } from "./vault.js";
@@ -72,6 +72,32 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
   });
 
   router.get("/operators", (_req, res) => res.json(allOperators().map(toApiOperator)));
+
+  // Dropdown options per operator, built from the brain (system/tags.md +
+  // content.md pillars). Field name -> allowed values; arrays are multi-select.
+  router.get("/vocab/:operator", (req, res) => {
+    const tags = loadTagVocab();
+    const pillars = loadPillars();
+    const formats = ["carousel", "reel", "caption", "story"];
+    const byOperator: Record<string, Record<string, (string | number)[]>> = {
+      "input-classifier": {
+        type: ["visual_reference", "hook", "trend", "yoga_note", "personal_reflection", "tarot_chakra_philosophy"],
+        pillar: pillars,
+        aesthetic: tags.aesthetic ?? [],
+        mood: tags.mood ?? [],
+        themes: tags.themes ?? [],
+        usefulness_score: [1, 2, 3, 4, 5],
+      },
+      "idea-hook": { pillar: pillars, suggested_format: formats },
+      "trend-translator": { best_pillar: pillars, format: formats, keep_or_skip: ["keep", "skip"] },
+      "visual-direction": {
+        dialect: ["scrapbook", "editorial", "mystical", "soft_wellness"],
+        mood: ["soft_wellness", "mystical"],
+      },
+      "carousel-builder": {},
+    };
+    res.json(byOperator[req.params.operator] ?? {});
+  });
 
   router.get("/layout", (_req, res) => res.json(layout.read()));
 

@@ -427,3 +427,23 @@ button.primary { background: var(--accent); }
 .toast { background: #3a3126; }
 .modal { border: 1px solid rgba(165, 67, 46, 0.4); }
 .modal h2 { padding-bottom: 8px; border-bottom: 1px solid rgba(165, 67, 46, 0.3); }
+
+/* ── Tag picker in the review window ── */
+.tagpicker-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 8px; }
+.picked {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; padding: 4px 6px 4px 12px;
+  border-radius: 99px; background: var(--accent-soft); color: #7c3626;
+  border: 1px solid rgba(165, 67, 46, 0.35);
+}
+.picked button {
+  border: none; background: transparent; color: #a5432e; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0 4px;
+}
+.tagpicker-add { display: flex; gap: 8px; }
+.tagpicker-add select { width: auto; flex: 1; font-size: 13px; padding: 7px 10px; }
+.tagpicker-add input { flex: 1; font-size: 13px; padding: 7px 10px; }
+.field select {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 12px; font: inherit; background: var(--surface); color: var(--ink);
+}

@@ -61,6 +61,8 @@ export const api = {
   notes: (params: Record<string, string> = {}) =>
     fetch(`/api/notes?${new URLSearchParams(params)}`).then((r) => handle<ApiNote[]>(r)),
   operators: () => fetch("/api/operators").then((r) => handle<OperatorInfo[]>(r)),
+  vocab: (operator: string) =>
+    fetch(`/api/vocab/${operator}`).then((r) => handle<Record<string, (string | number)[]>>(r)),
   layout: () => fetch("/api/layout").then((r) => handle<CanvasState>(r)),
   saveLayout: (patch: { positions?: Layout; feeds?: Feed[] }) =>
     fetch("/api/layout", {

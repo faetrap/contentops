@@ -1,5 +1,6 @@
 import path from "node:path";
 import { z } from "zod";
+import { loadPillars, loadTagVocab } from "../system.js";
 import { FOLDERS, TYPE_TO_FOLDER, type Note, type Vault } from "../vault.js";
 import { imageEmbeds, type Operator } from "./registry.js";
 
@@ -15,6 +16,7 @@ const ClassifierOutput = z.object({
   pillar: z.string(),
   aesthetic: z.array(z.string()),
   mood: z.array(z.string()),
+  themes: z.array(z.string()),
   usefulness_score: z.number().int().min(1).max(5),
   summary: z.string(),
 });
@@ -45,12 +47,20 @@ export const classifierOperator: Operator<ClassifierPayload> = {
       ? `\n\nAttached image(s) — read each file and include what you see in the classification:\n` +
         images.map((rel) => vault.abs(rel)).join("\n")
       : "";
+    // Controlled vocabulary from the brain — tags stay consistent and findable.
+    const tags = loadTagVocab();
+    const pillars = loadPillars();
     return (
       `Classify this captured input.\n\n` +
       `Required JSON schema:\n` +
       `{"type": "visual_reference|hook|trend|yoga_note|personal_reflection|tarot_chakra_philosophy", ` +
-      `"pillar": "string", "aesthetic": ["string"], "mood": ["string"], ` +
+      `"pillar": "string", "aesthetic": ["string"], "mood": ["string"], "themes": ["string"], ` +
       `"usefulness_score": 1-5, "summary": "one sentence"}\n\n` +
+      `CONTROLLED VOCABULARY — choose ONLY from these lists, never invent tags:\n` +
+      `pillar (exactly one): ${pillars.join(" | ")}\n` +
+      `aesthetic (2-4): ${(tags.aesthetic ?? []).join(", ")}\n` +
+      `mood (2-3): ${(tags.mood ?? []).join(", ")}\n` +
+      `themes (1-3, what it is ABOUT): ${(tags.themes ?? []).join(", ")}\n\n` +
       `Input note:\n---\n${note.body || "(no text — image only)"}\n---${imageSection}`
     );
   },
@@ -72,6 +82,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
         pillar: payload.pillar,
         aesthetic: payload.aesthetic,
         mood: payload.mood,
+        themes: payload.themes,
         usefulness_score: payload.usefulness_score,
         summary: payload.summary,
         status: "processed",
