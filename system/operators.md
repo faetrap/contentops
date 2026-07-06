@@ -70,7 +70,9 @@ Copy this block to define any new operator.
 - **When to use:** when an idea's format is `carousel` and it's approved.
 - **How to review:** Does slide 1 stop the scroll? Does the last slide *land* rather than sell? One idea across the whole set?
 
-> **Later operators** (not first-5): Reel Builder, Caption Operator, Repurpose Operator (1 post → 5 derivatives), Feedback Operator (post-performance → notes). Add them using the spec template once the first 5 feel good.
+> **Later operators** (not first-5): Reel Builder (incl. talking-head scripts), Visual Quote Builder (one line → designed quote spec), **Tarot → Yoga Theme** (card in → class theme + content angle out), **Curation Digest** (the week's processed inputs → "content I consumed this week" roundup), Caption Operator, Repurpose Operator (1 post → 5 derivatives), Feedback Operator (post-performance → notes). Add them using the spec template once the first 5 feel good.
+>
+> **Taxonomy rule of thumb:** a *noun you collected* = inspiration card. A *verb with an arrow* (X → Y) = operator. The *shape of a finished post* = format (each format earns a builder operator). A *named, repeating container* = series (a recipe combining pillar + format + operator — lives in content.md §5).
 
 ---
 

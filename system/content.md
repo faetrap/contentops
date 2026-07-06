@@ -56,11 +56,14 @@ The voice is already defined by the creator's own writing. Match the *sensibilit
 | Format | Use it for | Length |
 |---|---|---|
 | **Carousel** | An idea with a turn — a reframe, a walk-through, a list that earns its ending | 4–8 slides |
+| **Educational breakdown** | Carousel subtype: "how X actually works" — anatomy, a pranayama, a yama unpacked | 5–8 slides |
 | **Reel** | Movement, a single line that hits, a practice demonstrated, atmosphere | 7–25s |
+| **Talking-head video** | Reel subtype: you to camera, one thought spoken plainly — intimacy over polish | 15–45s |
+| **Visual quote** | One line strong enough to stand alone, designed (not a stock-photo quote card) | 1 image |
 | **Single image + caption** | A photograph or scrapbook frame that can carry a short, dense caption | 1 image |
 | **Story series** | Thinking out loud, behind-the-scenes, a question posed to the audience | 3–6 frames |
 
-Default to **carousel** when the idea has an argument, **reel** when it has a feeling.
+Default to **carousel** when the idea has an argument, **reel** when it has a feeling, **visual quote** when one line already carries it.
 
 ---
 
@@ -73,6 +76,11 @@ Series lower the cost of showing up and build a habit in the audience. Start 2�
 - **Notes to a tired woman** — short, direct pieces on capacity, boundaries, empowerment.
 - **Body letters** — writing *from* a body part ("a letter from your jaw").
 - **Field notes** — scrapbook-style visual posts: a screenshot, a texture, a line. Low-effort, high-aesthetic.
+- **Inside a yoga teacher's brain** — what's actually going through your head while teaching/sequencing/holding space. Honest, a little funny, demystifying.
+- **Before / during / after** — fixed 3-beat template around a practice, a pose, a hard conversation, a season. The structure IS the hook.
+- **Yoga for ___** — a series family: yoga for confidence, for boundaries, for grief, for decision-fatigue. Theme in, practice + reframe out.
+- **Tarot card → yoga theme** — a card pulled becomes a class theme + content angle (powered by its own operator).
+- **Mindfulness content I consumed this week** — curation digest of the week's saved inputs: what you read/watched/screenshotted, with one honest line on each.
 
 ---
 
