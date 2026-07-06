@@ -1,0 +1,5 @@
+{
+  "vaultPath": "/absolute/path/to/your/obsidian/content-ops/folder",
+  "model": "sonnet",
+  "port": 4820
+}
