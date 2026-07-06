@@ -16,7 +16,7 @@ export interface Toast {
 export default function App() {
   const [tab, setTab] = useState<Tab>("canvas");
   const [notes, setNotes] = useState<ApiNote[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ id: string; edit: boolean } | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [runningOp, setRunningOp] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -48,7 +48,7 @@ export default function App() {
     try {
       const result = await api.approve(proposal.id, payload);
       setProposal(null);
-      setSelectedId(null);
+      setSelected(null);
       refresh();
       showToast({ text: `✓ ${result.effectSummary}` });
     } catch (e) {
@@ -88,7 +88,17 @@ export default function App() {
             notes={notes}
             runningOp={runningOp}
             onRun={runOperator}
-            onOpen={setSelectedId}
+            onOpen={(id) => setSelected({ id, edit: false })}
+            onEdit={(id) => setSelected({ id, edit: true })}
+            onArchive={async (id) => {
+              try {
+                await api.archiveNote(id);
+                refresh();
+                showToast({ text: "Binned — it's kept in List → Archived (restorable)." });
+              } catch (e) {
+                showToast({ text: (e as Error).message, error: true });
+              }
+            }}
             onCaptured={() => {
               refresh();
               showToast({ text: "Captured to your board." });
@@ -99,7 +109,19 @@ export default function App() {
         )}
         {tab === "list" && (
           <div className="scroll-pane">
-            <Library notes={notes} onSelect={setSelectedId} />
+            <Library
+              notes={notes}
+              onSelect={(id) => setSelected({ id, edit: false })}
+              onRestore={async (id) => {
+                try {
+                  await api.restoreNote(id);
+                  refresh();
+                  showToast({ text: "Restored — it's back on the board." });
+                } catch (e) {
+                  showToast({ text: (e as Error).message, error: true });
+                }
+              }}
+            />
           </div>
         )}
         {tab === "settings" && (
@@ -109,10 +131,11 @@ export default function App() {
         )}
       </main>
 
-      {selectedId && (
+      {selected && (
         <NoteDetail
-          noteId={selectedId}
-          onClose={() => setSelectedId(null)}
+          noteId={selected.id}
+          startEditing={selected.edit}
+          onClose={() => setSelected(null)}
           onRunOperator={runOperator}
           runningOp={runningOp}
           onSaved={() => {

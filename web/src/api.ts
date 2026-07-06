@@ -68,6 +68,10 @@ export const api = {
       body: JSON.stringify(patch),
     }).then((r) => handle<CanvasState>(r)),
   note: (id: string) => fetch(`/api/notes/${id}`).then((r) => handle<ApiNote>(r)),
+  archiveNote: (id: string) =>
+    fetch(`/api/notes/${id}`, { method: "DELETE" }).then((r) => handle<{ ok: boolean }>(r)),
+  restoreNote: (id: string) =>
+    fetch(`/api/notes/${id}/restore`, { method: "POST" }).then((r) => handle<{ ok: boolean }>(r)),
   updateNote: (id: string, patch: { body?: string; summary?: string }) =>
     fetch(`/api/notes/${id}`, {
       method: "PATCH",

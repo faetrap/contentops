@@ -31,12 +31,16 @@ interface Props {
   runningOp: string | null;
   onRun: (operator: string, noteIds: string[]) => void;
   onOpen: (noteId: string) => void;
+  onEdit: (noteId: string) => void;
+  onArchive: (noteId: string) => void;
   onCaptured: () => void;
   onError: (message: string) => void;
   onInfo: (message: string) => void;
 }
 
-export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, onInfo }: Props) {
+export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onArchive, onCaptured, onError, onInfo }: Props) {
+  // Archived notes leave the board; they stay findable in the List tab.
+  const notes = allNotes.filter((n) => n.frontmatter.status !== "archived");
   const positions = useRef<Layout>({});
   const feedsRef = useRef<Feed[]>([]);
   const [operators, setOperators] = useState<OperatorInfo[]>([]);
@@ -85,7 +89,7 @@ export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, o
         pos = { x, y };
         positions.current[note.id] = pos;
       }
-      return { id: note.id, type: "note", position: pos, data: { note, onOpen } };
+      return { id: note.id, type: "note", position: pos, data: { note, onOpen, onEdit, onArchive } };
     });
 
     // ── Operator machines ──
@@ -159,7 +163,7 @@ export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, o
     setNodes([...noteNodes, ...opNodes]);
     setEdges(built);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, operators, runningOp, onRun, onOpen, feedVersion, persistFeeds]);
+  }, [notes, operators, runningOp, onRun, onOpen, onEdit, onArchive, feedVersion, persistFeeds]);
 
   useEffect(() => {
     if (ready) rebuild();
@@ -227,7 +231,10 @@ export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, o
         <span><i className="dot dot-input" /> inspiration</span>
         <span><i className="dot dot-op" /> operator</span>
         <span><i className="dot dot-output" /> output</span>
-        <span className="legend-hint">drag card → operator to plug in · click a brass wire to unplug</span>
+        <span className="legend-wires">
+          <i className="wire wire-feed" /> plugged in · <i className="wire wire-prod" /> made by ·{" "}
+          <i className="wire wire-lin" /> came from
+        </span>
       </div>
       <ReactFlow
         nodes={nodes}

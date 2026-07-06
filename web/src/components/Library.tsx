@@ -2,7 +2,6 @@ import { useState, type ReactNode } from "react";
 import type { ApiNote } from "../api";
 
 const TYPES = [
-  "",
   "unclassified",
   "visual_reference",
   "hook",
@@ -14,9 +13,20 @@ const TYPES = [
   "design_brief",
   "carousel_draft",
 ];
-const STATUSES = ["", "raw", "processed", "idea", "draft", "approved", "posted", "archived"];
+const STATUSES = ["raw", "processed", "idea", "draft", "approved", "posted", "archived"];
 
-export function Library({ notes, onSelect }: { notes: ApiNote[]; onSelect: (id: string) => void }) {
+const pretty = (s: string) => {
+  const t = s.replaceAll("_", " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+interface Props {
+  notes: ApiNote[];
+  onSelect: (id: string) => void;
+  onRestore: (id: string) => void;
+}
+
+export function Library({ notes, onSelect, onRestore }: Props) {
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
 
@@ -26,25 +36,58 @@ export function Library({ notes, onSelect }: { notes: ApiNote[]; onSelect: (id: 
 
   return (
     <>
-      <div className="filters">
-        <select value={type} onChange={(e) => setType(e.target.value)}>
+      <div className="tag-filters">
+        <span className="tag-label">Type</span>
+        <div className="tag-row">
+          <button className={`tag tag-type${type === "" ? " on" : ""}`} onClick={() => setType("")}>
+            All
+          </button>
           {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t === "" ? "All types" : t.replaceAll("_", " ")}
-            </option>
+            <button
+              key={t}
+              className={`tag tag-type${type === t ? " on" : ""}`}
+              onClick={() => setType(type === t ? "" : t)}
+            >
+              {pretty(t)}
+            </button>
           ))}
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        </div>
+        <span className="tag-label">Status</span>
+        <div className="tag-row">
+          <button className={`tag tag-status${status === "" ? " on" : ""}`} onClick={() => setStatus("")}>
+            All
+          </button>
           {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s === "" ? "All statuses" : s}
-            </option>
+            <button
+              key={s}
+              className={`tag tag-status${status === s ? " on" : ""}`}
+              onClick={() => setStatus(status === s ? "" : s)}
+            >
+              {pretty(s)}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
       {filtered.length === 0 && <div className="empty">Nothing here yet.</div>}
       {filtered.map((n) => (
-        <NoteRow key={n.id} note={n} onSelect={onSelect} />
+        <NoteRow
+          key={n.id}
+          note={n}
+          onSelect={onSelect}
+          action={
+            n.frontmatter.status === "archived" ? (
+              <button
+                className="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(n.id);
+                }}
+              >
+                ↩︎ Restore
+              </button>
+            ) : undefined
+          }
+        />
       ))}
     </>
   );
@@ -72,8 +115,8 @@ export function NoteRow({
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-        <span className={`badge ${note.frontmatter.status}`}>{note.frontmatter.status}</span>
-        <span className="badge">{note.frontmatter.type.replaceAll("_", " ")}</span>
+        <span className={`badge ${note.frontmatter.status}`}>{pretty(note.frontmatter.status)}</span>
+        <span className="badge badge-type">{pretty(note.frontmatter.type)}</span>
         {action}
       </div>
     </div>

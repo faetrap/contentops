@@ -4,6 +4,8 @@ import { assetUrl, type ApiNote } from "../api";
 export interface NoteNodeData {
   note: ApiNote;
   onOpen: (noteId: string) => void;
+  onEdit: (noteId: string) => void;
+  onArchive: (noteId: string) => void;
   [key: string]: unknown;
 }
 
@@ -24,7 +26,7 @@ const TYPE_ICON: Record<string, string> = {
 const OUTPUT_TYPES = new Set(["idea", "design_brief", "carousel_draft", "reel_draft", "caption_draft"]);
 
 export function NoteNode({ data }: NodeProps) {
-  const { note, onOpen } = data as NoteNodeData;
+  const { note, onOpen, onEdit, onArchive } = data as NoteNodeData;
   const fm = note.frontmatter;
   const image = note.body.match(/!\[\[([^\]]+\.(?:png|jpe?g|webp|gif))\]\]/i)?.[1];
   const firstProse = note.body
@@ -45,6 +47,26 @@ export function NoteNode({ data }: NodeProps) {
         <span className="node-icon">{TYPE_ICON[fm.type] ?? "•"}</span>
         <span className="node-type">{fm.type.replaceAll("_", " ")}</span>
         <span className={`badge ${fm.status}`}>{fm.status}</span>
+        <button
+          className="node-act"
+          title="Edit this note"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(note.id);
+          }}
+        >
+          ✏️
+        </button>
+        <button
+          className="node-act"
+          title="Bin — removes it from the board (kept in List → Archived)"
+          onClick={(e) => {
+            e.stopPropagation();
+            onArchive(note.id);
+          }}
+        >
+          🗑
+        </button>
       </div>
       {image && <img className="node-thumb" src={assetUrl(image)} alt="" />}
       <div className="node-title">{title.slice(0, 140)}</div>

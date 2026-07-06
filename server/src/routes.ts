@@ -95,6 +95,30 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     res.json({ ...toApiNote(vault.readNote(note.relPath)!), operators: operatorsForNote(note).map(toApiOperator) });
   });
 
+  // "Bin" = archive, never delete — the card leaves the board, the file stays.
+  router.delete("/notes/:id", (req, res) => {
+    const note = vault.findById(req.params.id);
+    if (!note) return res.status(404).json({ error: "Note not found" });
+    vault.writeNote(
+      note.relPath,
+      { ...note.frontmatter, archived_from: note.frontmatter.status, status: "archived" },
+      note.body
+    );
+    res.json({ ok: true });
+  });
+
+  router.post("/notes/:id/restore", (req, res) => {
+    const note = vault.findById(req.params.id);
+    if (!note) return res.status(404).json({ error: "Note not found" });
+    const { archived_from, ...rest } = note.frontmatter;
+    vault.writeNote(
+      note.relPath,
+      { ...rest, status: (archived_from as string) || "processed" },
+      note.body
+    );
+    res.json({ ok: true });
+  });
+
   router.get("/assets/*", (req, res) => {
     const rel = decodeURIComponent((req.params as Record<string, string>)[0] ?? "");
     try {

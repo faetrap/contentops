@@ -7,12 +7,13 @@ interface Props {
   onRunOperator: (name: string, noteIds: string[]) => void;
   runningOp: string | null;
   onSaved?: () => void;
+  startEditing?: boolean;
 }
 
-export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved }: Props) {
+export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved, startEditing }: Props) {
   const [note, setNote] = useState<ApiNote | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startEditing ?? false);
   const [draftBody, setDraftBody] = useState("");
   const [draftSummary, setDraftSummary] = useState("");
   const [saving, setSaving] = useState(false);
