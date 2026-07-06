@@ -9,6 +9,7 @@ import {
   type Edge,
   type Node,
   type NodeChange,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -48,6 +49,14 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
   const [edges, setEdges] = useEdgesState<Edge>([]);
   const [ready, setReady] = useState(false);
   const [feedVersion, setFeedVersion] = useState(0);
+  const flowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
+  const framedRef = useRef(false);
+
+  // Callbacks live in a ref so node rebuilds never depend on their identity —
+  // unstable callback props were wiping React Flow's node measurements every
+  // render, leaving every node permanently `visibility: hidden`.
+  const cbRef = useRef({ onRun, onOpen, onEdit, onArchive });
+  cbRef.current = { onRun, onOpen, onEdit, onArchive };
 
   useEffect(() => {
     let alive = true;
@@ -101,7 +110,17 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         pos = { x, y };
         positions.current[note.id] = pos;
       }
-      return { id: note.id, type: "note", position: pos, data: { note, onOpen, onEdit, onArchive } };
+      return {
+        id: note.id,
+        type: "note",
+        position: pos,
+        data: {
+          note,
+          onOpen: (id: string) => cbRef.current.onOpen(id),
+          onEdit: (id: string) => cbRef.current.onEdit(id),
+          onArchive: (id: string) => cbRef.current.onArchive(id),
+        },
+      };
     });
 
     // ── Operator machines ──
@@ -124,7 +143,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
           anyRunning: runningOp !== null,
           onRun: (name: string) => {
             const noteIds = feedsRef.current.filter((f) => f.operator === name).map((f) => f.noteId);
-            onRun(name, noteIds);
+            cbRef.current.onRun(name, noteIds);
           },
         },
       };
@@ -172,10 +191,27 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
       }
     }
 
-    setNodes([...noteNodes, ...opNodes]);
+    // Merge into existing nodes instead of replacing them — replacement threw
+    // away React Flow's measured dimensions, so nodes never left their initial
+    // `visibility: hidden` state.
+    setNodes((prev) => {
+      const prevById = new Map(prev.map((n) => [n.id, n]));
+      return [...noteNodes, ...opNodes].map((fresh) => {
+        const old = prevById.get(fresh.id);
+        return old ? { ...old, data: fresh.data, type: fresh.type } : fresh;
+      });
+    });
     setEdges(built);
+
+    // Frame the cards once, the first time real content lands.
+    if (!framedRef.current && (notes.length > 0 || operators.length > 0)) {
+      framedRef.current = true;
+      requestAnimationFrame(() => {
+        flowRef.current?.fitView({ padding: 0.25, maxZoom: 0.95 });
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, operators, runningOp, onRun, onOpen, onEdit, onArchive, feedVersion, persistFeeds]);
+  }, [notes, operators, runningOp, feedVersion, persistFeeds]);
 
   useEffect(() => {
     if (ready) rebuild();
@@ -249,18 +285,19 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         </span>
       </div>
       <ReactFlow
-        key={nodes.length > 0 ? "loaded" : "empty"}
         nodes={nodes}
         edges={edges}
+        onInit={(instance) => {
+          flowRef.current = instance;
+          if (framedRef.current) instance.fitView({ padding: 0.25, maxZoom: 0.95 });
+        }}
         onNodesChange={handleNodesChange}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
         onNodeClick={(_, node) => {
-          if (node.type === "note") onOpen(node.id);
+          if (node.type === "note") cbRef.current.onOpen(node.id);
         }}
         nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.25, maxZoom: 0.95 }}
         minZoom={0.15}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
