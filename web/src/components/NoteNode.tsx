@@ -1,10 +1,8 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { assetUrl, type ApiNote, type OperatorInfo } from "../api";
+import { assetUrl, type ApiNote } from "../api";
 
 export interface NoteNodeData {
   note: ApiNote;
-  running: string | null;
-  onRun: (operator: string, noteId: string) => void;
   onOpen: (noteId: string) => void;
   [key: string]: unknown;
 }
@@ -22,8 +20,11 @@ const TYPE_ICON: Record<string, string> = {
   carousel_draft: "🃏",
 };
 
+/** Output types are products of operators — tinted violet on the board. */
+const OUTPUT_TYPES = new Set(["idea", "design_brief", "carousel_draft", "reel_draft", "caption_draft"]);
+
 export function NoteNode({ data }: NodeProps) {
-  const { note, running, onRun, onOpen } = data as NoteNodeData;
+  const { note, onOpen } = data as NoteNodeData;
   const fm = note.frontmatter;
   const image = note.body.match(/!\[\[([^\]]+\.(?:png|jpe?g|webp|gif))\]\]/i)?.[1];
   const firstProse = note.body
@@ -32,11 +33,14 @@ export function NoteNode({ data }: NodeProps) {
     .map((l) => l.trim())
     .find((l) => l && !l.startsWith("#") && !l.startsWith("- [["));
   const title = (fm.summary as string) || firstProse || "(image)";
-  const ops: OperatorInfo[] = note.operators ?? [];
+  const isOutput = OUTPUT_TYPES.has(fm.type);
 
   return (
-    <div className={`node node-${fm.status}`} onDoubleClick={() => onOpen(note.id)}>
-      <Handle type="target" position={Position.Left} className="node-handle" />
+    <div
+      className={`node ${isOutput ? "node-output" : "node-input"} node-${fm.status}`}
+      onDoubleClick={() => onOpen(note.id)}
+      title="Double-click to open · drag from the right edge into an operator to feed it"
+    >
       <div className="node-head">
         <span className="node-icon">{TYPE_ICON[fm.type] ?? "•"}</span>
         <span className="node-type">{fm.type.replaceAll("_", " ")}</span>
@@ -44,25 +48,8 @@ export function NoteNode({ data }: NodeProps) {
       </div>
       {image && <img className="node-thumb" src={assetUrl(image)} alt="" />}
       <div className="node-title">{title.slice(0, 140)}</div>
-      {ops.length > 0 && (
-        <div className="node-ops">
-          {ops.map((op) => (
-            <button
-              key={op.name}
-              className="node-op"
-              disabled={running !== null}
-              title={op.description}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRun(op.name, note.id);
-              }}
-            >
-              {running === op.name ? <span className="spinner dark" /> : "⚡"} {op.label}
-            </button>
-          ))}
-        </div>
-      )}
       <Handle type="source" position={Position.Right} className="node-handle" />
+      <Handle type="target" position={Position.Left} className="node-handle node-handle-in" />
     </div>
   );
 }

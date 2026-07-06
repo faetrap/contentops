@@ -25,6 +25,7 @@ export const carouselBuilderOperator: Operator<CarouselPayload> = {
   name: "carousel-builder",
   label: "Build carousel",
   description: "Expands an approved idea into a slide-by-slide carousel structure plus caption.",
+  accepts: "one idea note",
   promptFile: "carousel-builder.md",
   systemFiles: ["content", "visual"],
   schema: CarouselOutput,
@@ -38,7 +39,7 @@ export const carouselBuilderOperator: Operator<CarouselPayload> = {
   },
 
   buildUserPrompt(notes: Note[]): string {
-    const idea = notes[0];
+    const idea = notes.find((n) => n.frontmatter.type === "idea") ?? notes[0];
     return (
       `Turn this approved idea into a 4–8 slide carousel. ` +
       `Slide 1 = hook (per content.md hook styles). Interior slides = ONE thought each. ` +
@@ -56,7 +57,7 @@ export const carouselBuilderOperator: Operator<CarouselPayload> = {
   },
 
   apply(payload, sourceNotes, vault): { effectSummary: string } {
-    const idea = sourceNotes[0];
+    const idea = sourceNotes.find((n) => n.frontmatter.type === "idea") ?? sourceNotes[0];
     const link = `[[${path.basename(idea.relPath, ".md")}]]`;
     const body = [
       `## Slides`,

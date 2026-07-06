@@ -25,6 +25,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
   name: "input-classifier",
   label: "Classify",
   description: "Tags a raw input (type, pillar, aesthetic, mood) and files it into /01 Inputs.",
+  accepts: "raw captures from the Inbox — one at a time",
   promptFile: "input-classifier.md",
   systemFiles: ["content", "visual"],
   schema: ClassifierOutput,
@@ -38,7 +39,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
   },
 
   buildUserPrompt(notes: Note[], vault: Vault): string {
-    const note = notes[0];
+    const note = notes.find((n) => this.appliesTo(n)) ?? notes[0];
     const images = imageEmbeds(note);
     const imageSection = images.length
       ? `\n\nAttached image(s) — read each file and include what you see in the classification:\n` +
@@ -60,7 +61,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
   },
 
   apply(payload, sourceNotes, vault): { effectSummary: string } {
-    const note = sourceNotes[0];
+    const note = sourceNotes.find((n) => n.frontmatter.status === "raw") ?? sourceNotes[0];
     const subfolder = TYPE_TO_FOLDER[payload.type] ?? "Personal Reflections";
     const targetFolder = path.join(FOLDERS.inputs, subfolder);
     vault.writeNote(

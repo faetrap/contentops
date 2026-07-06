@@ -11,12 +11,15 @@ export interface ApiNote {
   };
   body: string;
   operators?: OperatorInfo[];
+  /** Operator names this note may be wired into on the canvas. */
+  feedable?: string[];
 }
 
 export interface OperatorInfo {
   name: string;
   label: string;
   description: string;
+  accepts: string;
 }
 
 export interface Proposal {
@@ -42,17 +45,28 @@ async function handle<T>(res: Response): Promise<T> {
 
 export type Layout = Record<string, { x: number; y: number }>;
 
+export interface Feed {
+  noteId: string;
+  operator: string;
+}
+
+export interface CanvasState {
+  positions: Layout;
+  feeds: Feed[];
+}
+
 export const api = {
   health: () => fetch("/api/health").then((r) => handle<Health>(r)),
   notes: (params: Record<string, string> = {}) =>
     fetch(`/api/notes?${new URLSearchParams(params)}`).then((r) => handle<ApiNote[]>(r)),
-  layout: () => fetch("/api/layout").then((r) => handle<Layout>(r)),
-  saveLayout: (positions: Layout) =>
+  operators: () => fetch("/api/operators").then((r) => handle<OperatorInfo[]>(r)),
+  layout: () => fetch("/api/layout").then((r) => handle<CanvasState>(r)),
+  saveLayout: (patch: { positions?: Layout; feeds?: Feed[] }) =>
     fetch("/api/layout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ positions }),
-    }).then((r) => handle<Layout>(r)),
+      body: JSON.stringify(patch),
+    }).then((r) => handle<CanvasState>(r)),
   note: (id: string) => fetch(`/api/notes/${id}`).then((r) => handle<ApiNote>(r)),
   capture: (text: string, image: File | null) => {
     const form = new FormData();

@@ -11,8 +11,12 @@ export interface Operator<T = unknown> {
   name: string;
   label: string;
   description: string;
-  /** Which notes this operator can run on. */
+  /** Human description of what this operator feeds on, shown on its canvas node. */
+  accepts: string;
+  /** Which notes this operator can run on (the primary input). */
   appliesTo(note: Note): boolean;
+  /** Additional note kinds that may be wired in as secondary inputs (e.g. visual refs). */
+  alsoAccepts?(note: Note): boolean;
   /** Prompt file inside /02 Operators (editable by the owner). */
   promptFile: string;
   /** Which system/ brain files this operator loads as context on every run. */
@@ -39,6 +43,11 @@ export function getOperator(name: string): Operator<any> | undefined {
 
 export function operatorsForNote(note: Note): Operator<any>[] {
   return [...registry.values()].filter((op) => op.appliesTo(note));
+}
+
+/** Operators a note may be wired into on the canvas (primary or secondary input). */
+export function feedableOperators(note: Note): Operator<any>[] {
+  return [...registry.values()].filter((op) => op.appliesTo(note) || op.alsoAccepts?.(note));
 }
 
 export function allOperators(): Operator<any>[] {

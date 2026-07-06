@@ -5,102 +5,203 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  type Connection,
   type Edge,
   type Node,
   type NodeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, type ApiNote, type Layout } from "../api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, type ApiNote, type Feed, type Layout, type OperatorInfo } from "../api";
 import { CaptureBar } from "./CaptureBar";
-import { NoteNode, type NoteNodeData } from "./NoteNode";
+import { NoteNode } from "./NoteNode";
+import { OperatorNode } from "./OperatorNode";
 
-const nodeTypes = { note: NoteNode };
+const nodeTypes = { note: NoteNode, operator: OperatorNode };
 
-const COLUMN: Record<string, number> = { raw: 0, processed: 1, idea: 2, draft: 3 };
+/** Board geography: inputs left, operators middle, outputs right. */
+const NOTE_X: Record<string, number> = { raw: 40, processed: 340 };
+const OUTPUT_X: Record<string, number> = { idea: 1080, draft: 1420 };
+const OP_X = 700;
+
+const OUTPUT_TYPES = new Set(["idea", "design_brief", "carousel_draft", "reel_draft", "caption_draft"]);
 
 interface Props {
   notes: ApiNote[];
   runningOp: string | null;
-  onRun: (operator: string, noteId: string) => void;
+  onRun: (operator: string, noteIds: string[]) => void;
   onOpen: (noteId: string) => void;
   onCaptured: () => void;
   onError: (message: string) => void;
+  onInfo: (message: string) => void;
 }
 
-/** Derive lineage edges from each note's [[wikilinks]] back to its sources. */
-function buildEdges(notes: ApiNote[]): Edge[] {
-  const byBasename = new Map<string, string>();
-  for (const n of notes) {
-    const base = n.relPath.split("/").pop()!.replace(/\.md$/, "");
-    byBasename.set(base, n.id);
-  }
-  const edges: Edge[] = [];
-  for (const n of notes) {
-    const links = (n.frontmatter.links as string[] | undefined) ?? [];
-    for (const link of links) {
-      const base = String(link).replace(/^\[\[/, "").replace(/\]\]$/, "");
-      const sourceId = byBasename.get(base);
-      if (sourceId && sourceId !== n.id) {
-        edges.push({
-          id: `${sourceId}->${n.id}`,
-          source: sourceId,
-          target: n.id,
-          animated: true,
-          style: { stroke: "#c9b79a", strokeWidth: 1.5, strokeDasharray: "5 5" },
-        });
-      }
-    }
-  }
-  return edges;
-}
-
-export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError }: Props) {
+export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError, onInfo }: Props) {
   const positions = useRef<Layout>({});
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<NoteNodeData>>([]);
+  const feedsRef = useRef<Feed[]>([]);
+  const [operators, setOperators] = useState<OperatorInfo[]>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges] = useEdgesState<Edge>([]);
-  const [layoutReady, setLayoutReady] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [feedVersion, setFeedVersion] = useState(0);
 
   useEffect(() => {
-    api
-      .layout()
-      .then((l) => (positions.current = l))
-      .catch(() => (positions.current = {}))
-      .finally(() => setLayoutReady(true));
+    Promise.all([api.layout(), api.operators()])
+      .then(([state, ops]) => {
+        positions.current = state.positions;
+        feedsRef.current = state.feeds;
+        setOperators(ops);
+      })
+      .catch((e) => onError(e.message))
+      .finally(() => setReady(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const persistFeeds = useCallback((feeds: Feed[]) => {
+    feedsRef.current = feeds;
+    setFeedVersion((v) => v + 1);
+    api.saveLayout({ feeds }).catch(() => {});
   }, []);
 
   const rebuild = useCallback(() => {
-    const colY: Record<number, number> = {};
-    const built: Node<NoteNodeData>[] = notes.map((note) => {
+    // Drop feed wires whose note vanished or no longer fits the operator
+    // (e.g. a raw card that got classified out of the classifier's diet).
+    const byId = new Map(notes.map((n) => [n.id, n]));
+    const validFeeds = feedsRef.current.filter((f) => byId.get(f.noteId)?.feedable?.includes(f.operator));
+    if (validFeeds.length !== feedsRef.current.length) persistFeeds(validFeeds);
+
+    // ── Note cards ──
+    const colY: Record<string, number> = {};
+    const noteNodes: Node[] = notes.map((note) => {
       let pos = positions.current[note.id];
       if (!pos) {
-        const col = COLUMN[note.frontmatter.status] ?? 4;
-        const y = colY[col] ?? 60;
-        pos = { x: 60 + col * 360, y };
-        // Reserve more vertical room for image cards so nothing overlaps on first load.
+        const isOutput = OUTPUT_TYPES.has(note.frontmatter.type);
+        const x = isOutput
+          ? OUTPUT_X[note.frontmatter.status] ?? OUTPUT_X.idea
+          : NOTE_X[note.frontmatter.status] ?? NOTE_X.processed;
+        const y = colY[x] ?? 60;
         const hasImage = /!\[\[[^\]]+\.(?:png|jpe?g|webp|gif)\]\]/i.test(note.body);
-        colY[col] = y + (hasImage ? 410 : 175);
+        colY[x] = y + (hasImage ? 400 : 165);
+        pos = { x, y };
         positions.current[note.id] = pos;
       }
+      return { id: note.id, type: "note", position: pos, data: { note, onOpen } };
+    });
+
+    // ── Operator machines ──
+    const opNodes: Node[] = operators.map((op, i) => {
+      const id = `op:${op.name}`;
+      let pos = positions.current[id];
+      if (!pos) {
+        pos = { x: OP_X, y: 60 + i * 175 };
+        positions.current[id] = pos;
+      }
+      const feedCount = validFeeds.filter((f) => f.operator === op.name).length;
       return {
-        id: note.id,
-        type: "note",
+        id,
+        type: "operator",
         position: pos,
-        data: { note, running: runningOp, onRun, onOpen },
+        data: {
+          operator: op,
+          feedCount,
+          running: runningOp === op.name,
+          anyRunning: runningOp !== null,
+          onRun: (name: string) => {
+            const noteIds = feedsRef.current.filter((f) => f.operator === name).map((f) => f.noteId);
+            onRun(name, noteIds);
+          },
+        },
       };
     });
-    setNodes(built);
-    setEdges(buildEdges(notes));
-  }, [notes, runningOp, onRun, onOpen, setNodes, setEdges]);
+
+    // ── Wires ──
+    const built: Edge[] = [];
+    // 1. Feed wires the user plugged in (brass, solid, click to unplug)
+    for (const f of validFeeds) {
+      built.push({
+        id: `feed:${f.noteId}:${f.operator}`,
+        source: f.noteId,
+        target: `op:${f.operator}`,
+        style: { stroke: "#8a7355", strokeWidth: 2 },
+      });
+    }
+    // 2. Product wires: operator → the output it produced (violet)
+    const byBasename = new Map(notes.map((n) => [n.relPath.split("/").pop()!.replace(/\.md$/, ""), n.id]));
+    for (const n of notes) {
+      const src = String(n.frontmatter.source ?? "");
+      if (src.endsWith(" operator")) {
+        const opName = src.replace(" operator", "");
+        if (operators.some((o) => o.name === opName)) {
+          built.push({
+            id: `prod:${n.id}`,
+            source: `op:${opName}`,
+            target: n.id,
+            animated: true,
+            style: { stroke: "#7a68a6", strokeWidth: 2 },
+          });
+        }
+      }
+      // 3. Lineage wires: source note ⇢ output (pale, dashed — provenance)
+      for (const link of (n.frontmatter.links as string[] | undefined) ?? []) {
+        const base = String(link).replace(/^\[\[/, "").replace(/\]\]$/, "");
+        const sourceId = byBasename.get(base);
+        if (sourceId && sourceId !== n.id) {
+          built.push({
+            id: `lin:${sourceId}->${n.id}`,
+            source: sourceId,
+            target: n.id,
+            style: { stroke: "#ddd2c0", strokeWidth: 1.2, strokeDasharray: "4 5" },
+          });
+        }
+      }
+    }
+
+    setNodes([...noteNodes, ...opNodes]);
+    setEdges(built);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, operators, runningOp, onRun, onOpen, feedVersion, persistFeeds]);
 
   useEffect(() => {
-    if (layoutReady) rebuild();
-  }, [layoutReady, rebuild]);
+    if (ready) rebuild();
+  }, [ready, rebuild]);
 
-  // Persist positions shortly after a drag settles.
+  /** Drag a wire from a card into an operator = plug it in. */
+  const onConnect = useCallback(
+    (conn: Connection) => {
+      const opName = conn.target?.startsWith("op:") ? conn.target.slice(3) : null;
+      if (!opName || conn.source?.startsWith("op:")) {
+        onError("Wires go from a card into an operator (left edge).");
+        return;
+      }
+      const note = notes.find((n) => n.id === conn.source);
+      const op = operators.find((o) => o.name === opName);
+      if (!note || !op) return;
+      if (!note.feedable?.includes(opName)) {
+        onError(`"${op.label}" doesn't eat this kind of card — it feeds on: ${op.accepts}`);
+        return;
+      }
+      if (feedsRef.current.some((f) => f.noteId === note.id && f.operator === opName)) return;
+      persistFeeds([...feedsRef.current, { noteId: note.id, operator: opName }]);
+      onInfo(`Plugged into ${op.label} — press Run on it when ready.`);
+    },
+    [notes, operators, onError, onInfo, persistFeeds]
+  );
+
+  /** Click a brass wire to unplug it. */
+  const onEdgeClick = useCallback(
+    (_: unknown, edge: Edge) => {
+      if (!edge.id.startsWith("feed:")) return;
+      persistFeeds(
+        feedsRef.current.filter((f) => `feed:${f.noteId}:${f.operator}` !== edge.id)
+      );
+      onInfo("Unplugged.");
+    },
+    [persistFeeds, onInfo]
+  );
+
   const saveTimer = useRef<number | null>(null);
   const handleNodesChange = useCallback(
-    (changes: NodeChange<Node<NoteNodeData>>[]) => {
+    (changes: NodeChange<Node>[]) => {
       onNodesChange(changes);
       let moved = false;
       for (const c of changes) {
@@ -112,33 +213,32 @@ export function Canvas({ notes, runningOp, onRun, onOpen, onCaptured, onError }:
       if (moved) {
         if (saveTimer.current) window.clearTimeout(saveTimer.current);
         saveTimer.current = window.setTimeout(() => {
-          api.saveLayout(positions.current).catch(() => {});
+          api.saveLayout({ positions: positions.current }).catch(() => {});
         }, 600);
       }
     },
     [onNodesChange]
   );
 
-  const emptyHint = useMemo(() => notes.length === 0, [notes.length]);
-
   return (
     <div className="canvas-wrap">
       <CaptureBar onCaptured={onCaptured} onError={onError} />
-      {emptyHint && (
-        <div className="canvas-empty">
-          Your board is empty. Capture a thought or a screenshot above — it lands here as a card you
-          can run operators on.
-        </div>
-      )}
+      <div className="canvas-legend">
+        <span><i className="dot dot-input" /> inspiration</span>
+        <span><i className="dot dot-op" /> operator</span>
+        <span><i className="dot dot-output" /> output</span>
+        <span className="legend-hint">drag card → operator to plug in · click a brass wire to unplug</span>
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={handleNodesChange}
+        onConnect={onConnect}
+        onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes}
-        nodesConnectable={false}
         fitView
-        fitViewOptions={{ padding: 0.3, maxZoom: 1 }}
-        minZoom={0.2}
+        fitViewOptions={{ padding: 0.25, maxZoom: 0.95 }}
+        minZoom={0.15}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
       >

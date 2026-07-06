@@ -6,12 +6,22 @@ export interface Point {
   x: number;
   y: number;
 }
-export type Layout = Record<string, Point>;
+
+/** A feed wire the user drew: this note is plugged into this operator. */
+export interface Feed {
+  noteId: string;
+  operator: string;
+}
+
+export interface CanvasState {
+  positions: Record<string, Point>;
+  feeds: Feed[];
+}
 
 /**
- * Canvas card positions, stored in a dotfile inside the vault so it never
- * clutters Obsidian (the vault walker skips dot-prefixed entries) and never
- * touches note frontmatter on every drag.
+ * Canvas state (card positions + feed wires), stored in a dotfile inside the
+ * vault so it never clutters Obsidian (the vault walker skips dot-prefixed
+ * entries) and never touches note frontmatter on every drag.
  */
 export class LayoutStore {
   private readonly file: string;
@@ -19,17 +29,24 @@ export class LayoutStore {
     this.file = path.join(vault.root, ".contentops", "canvas.json");
   }
 
-  read(): Layout {
+  read(): CanvasState {
     try {
-      return JSON.parse(fs.readFileSync(this.file, "utf8")) as Layout;
+      const raw = JSON.parse(fs.readFileSync(this.file, "utf8"));
+      // Back-compat: the first version stored a flat {id: {x,y}} map.
+      if (raw && !raw.positions && !raw.feeds) return { positions: raw, feeds: [] };
+      return { positions: raw.positions ?? {}, feeds: raw.feeds ?? [] };
     } catch {
-      return {};
+      return { positions: {}, feeds: [] };
     }
   }
 
-  /** Merge new positions over existing ones. */
-  merge(positions: Layout): Layout {
-    const next = { ...this.read(), ...positions };
+  /** Merge new positions and/or replace feeds. */
+  update(patch: { positions?: Record<string, Point>; feeds?: Feed[] }): CanvasState {
+    const current = this.read();
+    const next: CanvasState = {
+      positions: { ...current.positions, ...(patch.positions ?? {}) },
+      feeds: patch.feeds ?? current.feeds,
+    };
     atomicWrite(this.file, JSON.stringify(next, null, 2));
     return next;
   }

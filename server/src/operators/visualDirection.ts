@@ -26,7 +26,8 @@ export const visualDirectionOperator: Operator<VisualDirectionPayload> = {
   name: "visual-direction",
   label: "Visual direction",
   description:
-    "Turns this idea + your latest visual references into a design brief mapped to a Figma template.",
+    "Turns an idea + visual references into a design brief mapped to a Figma template.",
+  accepts: "one idea + visual references (wire refs in, or it uses your latest saved ones)",
   promptFile: "visual-direction.md",
   systemFiles: ["visual"],
   schema: VisualDirectionOutput,
@@ -35,13 +36,19 @@ export const visualDirectionOperator: Operator<VisualDirectionPayload> = {
     return note.frontmatter.type === "idea";
   },
 
+  alsoAccepts(note: Note): boolean {
+    return note.frontmatter.type === "visual_reference" && note.frontmatter.status === "processed";
+  },
+
   needsVaultRead(): boolean {
     return true; // reads reference images from the vault
   },
 
   buildUserPrompt(notes: Note[], vault): string {
-    const idea = notes[0];
-    const refs = gatherRefs(vault);
+    const idea = notes.find((n) => n.frontmatter.type === "idea") ?? notes[0];
+    // Wired-in references win; otherwise fall back to the latest saved ones.
+    const wired = notes.filter((n) => n.frontmatter.type === "visual_reference");
+    const refs = wired.length > 0 ? wired : gatherRefs(vault);
     const refSection = refs.length
       ? refs
           .map((r, i) => {
@@ -65,12 +72,14 @@ export const visualDirectionOperator: Operator<VisualDirectionPayload> = {
   },
 
   effectPreview(payload, sourceNotes): string {
-    return `Create ${payload.dialect}/${payload.mood} design brief for "${path.basename(sourceNotes[0].relPath, ".md")}" in ${FOLDERS.drafts}/`;
+    const idea = sourceNotes.find((n) => n.frontmatter.type === "idea") ?? sourceNotes[0];
+    return `Create ${payload.dialect}/${payload.mood} design brief for "${path.basename(idea.relPath, ".md")}" in ${FOLDERS.drafts}/`;
   },
 
   apply(payload, sourceNotes, vault): { effectSummary: string } {
-    const idea = sourceNotes[0];
-    const refs = gatherRefs(vault);
+    const idea = sourceNotes.find((n) => n.frontmatter.type === "idea") ?? sourceNotes[0];
+    const wired = sourceNotes.filter((n) => n.frontmatter.type === "visual_reference");
+    const refs = wired.length > 0 ? wired : gatherRefs(vault);
     const links = [idea, ...refs].map((n) => `[[${path.basename(n.relPath, ".md")}]]`);
     const body = [
       `## Dialect & mood`,

@@ -32,10 +32,10 @@ export default function App() {
     setTimeout(() => setToast(null), t.error ? 6000 : 3000);
   }
 
-  const runOperator = useCallback(async (name: string, noteId: string) => {
+  const runOperator = useCallback(async (name: string, noteIds: string[]) => {
     setRunningOp(name);
     try {
-      setProposal(await api.runOperator(name, [noteId]));
+      setProposal(await api.runOperator(name, noteIds));
     } catch (e) {
       showToast({ text: (e as Error).message, error: true });
     } finally {
@@ -94,6 +94,7 @@ export default function App() {
               showToast({ text: "Captured to your board." });
             }}
             onError={(m) => showToast({ text: m, error: true })}
+            onInfo={(m) => showToast({ text: m })}
           />
         )}
         {tab === "list" && (
@@ -112,7 +113,7 @@ export default function App() {
         <NoteDetail
           noteId={selectedId}
           onClose={() => setSelectedId(null)}
-          onRunOperator={(name, ids) => runOperator(name, ids[0])}
+          onRunOperator={runOperator}
           runningOp={runningOp}
         />
       )}

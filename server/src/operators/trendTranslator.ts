@@ -18,6 +18,7 @@ export const trendTranslatorOperator: Operator<TrendPayload> = {
   name: "trend-translator",
   label: "Translate trend",
   description: "Converts an outside trend into an on-pillar, on-voice angle — or tells you to skip it.",
+  accepts: "processed trend notes (screenshots or descriptions of what's doing numbers)",
   promptFile: "trend-translator.md",
   systemFiles: ["content"],
   schema: TrendOutput,
@@ -31,7 +32,7 @@ export const trendTranslatorOperator: Operator<TrendPayload> = {
   },
 
   buildUserPrompt(notes: Note[], vault): string {
-    const note = notes[0];
+    const note = notes.find((n) => this.appliesTo(n)) ?? notes[0];
     const images = [...note.body.matchAll(/!\[\[([^\]]+\.(?:png|jpe?g|webp|gif))\]\]/gi)].map((m) =>
       vault.abs(m[1])
     );
@@ -56,7 +57,7 @@ export const trendTranslatorOperator: Operator<TrendPayload> = {
   },
 
   apply(payload, sourceNotes, vault): { effectSummary: string } {
-    const trend = sourceNotes[0];
+    const trend = sourceNotes.find((n) => n.frontmatter.type === "trend") ?? sourceNotes[0];
     if (payload.keep_or_skip === "skip") {
       vault.writeNote(
         trend.relPath,

@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { execFileSync } from "node:child_process";
 import { ClaudeAuthError, ClaudeOutputError, runClaudeJSON } from "./claude.js";
 import type { AppConfig } from "./config.js";
-import { getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
+import { allOperators, feedableOperators, getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
 import { antiDriftRule, systemContext } from "./system.js";
 import { LayoutStore } from "./layout.js";
 import { FOLDERS, type Note, type Vault } from "./vault.js";
@@ -49,17 +49,28 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     if (type) notes = notes.filter((n) => n.frontmatter.type === type);
     if (status) notes = notes.filter((n) => n.frontmatter.status === status);
     if (folder) notes = notes.filter((n) => n.relPath.startsWith(folder));
-    res.json(notes.map((n) => ({ ...toApiNote(n), operators: operatorsForNote(n).map(toApiOperator) })));
+    res.json(
+      notes.map((n) => ({
+        ...toApiNote(n),
+        operators: operatorsForNote(n).map(toApiOperator),
+        feedable: feedableOperators(n).map((op) => op.name),
+      }))
+    );
   });
+
+  router.get("/operators", (_req, res) => res.json(allOperators().map(toApiOperator)));
 
   router.get("/layout", (_req, res) => res.json(layout.read()));
 
   router.post("/layout", (req, res) => {
-    const positions = req.body?.positions;
-    if (!positions || typeof positions !== "object") {
-      return res.status(400).json({ error: "positions object required" });
+    const { positions, feeds } = req.body ?? {};
+    if (positions !== undefined && typeof positions !== "object") {
+      return res.status(400).json({ error: "positions must be an object" });
     }
-    res.json(layout.merge(positions));
+    if (feeds !== undefined && !Array.isArray(feeds)) {
+      return res.status(400).json({ error: "feeds must be an array" });
+    }
+    res.json(layout.update({ positions, feeds }));
   });
 
   router.get("/notes/:id", (req, res) => {
@@ -100,6 +111,9 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     const noteIds: string[] = Array.isArray(req.body?.noteIds) ? req.body.noteIds : [];
     const notes = noteIds.map((id) => vault.findById(id)).filter((n): n is Note => n !== null);
     if (notes.length === 0) return res.status(400).json({ error: "No valid notes given" });
+    if (!notes.some((n) => operator.appliesTo(n))) {
+      return res.status(400).json({ error: `This operator needs: ${operator.accepts}` });
+    }
 
     try {
       // Operator prompt + the system/ brain files + the Anti-Drift constitution.
@@ -182,5 +196,5 @@ function toApiNote(note: Note) {
 }
 
 function toApiOperator(op: Operator<unknown>) {
-  return { name: op.name, label: op.label, description: op.description };
+  return { name: op.name, label: op.label, description: op.description, accepts: op.accepts };
 }
