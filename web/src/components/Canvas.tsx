@@ -157,7 +157,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         id: `feed:${f.noteId}:${f.operator}`,
         source: f.noteId,
         target: `op:${f.operator}`,
-        style: { stroke: "#8a7355", strokeWidth: 2 },
+        style: { stroke: "#a5432e", strokeWidth: 2 },
       });
     }
     // 2. Product wires: operator → the output it produced (violet)
@@ -172,7 +172,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
             source: `op:${opName}`,
             target: n.id,
             animated: true,
-            style: { stroke: "#7a68a6", strokeWidth: 2 },
+            style: { stroke: "#3f5f8a", strokeWidth: 2 },
           });
         }
       }
@@ -185,7 +185,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
             id: `lin:${sourceId}->${n.id}`,
             source: sourceId,
             target: n.id,
-            style: { stroke: "#ddd2c0", strokeWidth: 1.2, strokeDasharray: "4 5" },
+            style: { stroke: "#d8c39d", strokeWidth: 1.2, strokeDasharray: "4 5" },
           });
         }
       }
@@ -302,7 +302,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="#ece3d3" />
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="#e9dcbc" />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>

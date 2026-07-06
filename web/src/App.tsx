@@ -116,6 +116,7 @@ export default function App() {
       <header className="app">
         <h1>
           Flow Fae <span>· ContentOps</span>
+          <span className="stamp-mark">♥</span>
         </h1>
         <span className={`pulse${pulse ? "" : " dead"}`} title="Live connection to your vault — if this isn't ticking, close the tab and open a fresh one">
           {pulse ? `● Live · ${pulse.cards} cards · ${pulse.at}` : "○ Connecting…"}
