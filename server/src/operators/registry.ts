@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { SystemFile } from "../system.js";
 import type { Note, Vault } from "../vault.js";
 
 export interface OperatorResult {
@@ -14,6 +15,8 @@ export interface Operator<T = unknown> {
   appliesTo(note: Note): boolean;
   /** Prompt file inside /02 Operators (editable by the owner). */
   promptFile: string;
+  /** Which system/ brain files this operator loads as context on every run. */
+  systemFiles: SystemFile[];
   schema: z.ZodType<T>;
   buildUserPrompt(notes: Note[], vault: Vault): string;
   /** Whether the Claude call needs Read access to the vault (image inputs). */

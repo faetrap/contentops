@@ -26,6 +26,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
   label: "Classify",
   description: "Tags a raw input (type, pillar, aesthetic, mood) and files it into /01 Inputs.",
   promptFile: "input-classifier.md",
+  systemFiles: ["content", "visual"],
   schema: ClassifierOutput,
 
   appliesTo(note: Note): boolean {

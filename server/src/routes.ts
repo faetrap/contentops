@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { ClaudeAuthError, ClaudeOutputError, runClaudeJSON } from "./claude.js";
 import type { AppConfig } from "./config.js";
 import { getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
+import { antiDriftRule, systemContext } from "./system.js";
 import { LayoutStore } from "./layout.js";
 import { FOLDERS, type Note, type Vault } from "./vault.js";
 
@@ -101,7 +102,15 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     if (notes.length === 0) return res.status(400).json({ error: "No valid notes given" });
 
     try {
-      const systemPrompt = vault.readOperatorPrompt(operator.promptFile);
+      // Operator prompt + the system/ brain files + the Anti-Drift constitution.
+      // Loaded fresh every run so edits to the brain apply immediately.
+      const systemPrompt = [
+        vault.readOperatorPrompt(operator.promptFile),
+        ...operator.systemFiles.map(systemContext),
+        antiDriftRule(),
+      ]
+        .filter(Boolean)
+        .join("\n\n");
       const needsRead = operator.needsVaultRead(notes);
       const payload = await runClaudeJSON(operator.schema, {
         systemPrompt,

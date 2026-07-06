@@ -18,6 +18,7 @@ export const ideaHookOperator: Operator<IdeaHookPayload> = {
   label: "Generate idea + hooks",
   description: "Turns processed input(s) into a content angle plus 10 hooks in Yen's voice.",
   promptFile: "idea-hook.md",
+  systemFiles: ["content"],
   schema: IdeaHookOutput,
 
   appliesTo(note: Note): boolean {
