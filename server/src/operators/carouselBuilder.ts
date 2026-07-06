@@ -26,6 +26,7 @@ export const carouselBuilderOperator: Operator<CarouselPayload> = {
   label: "Build carousel",
   description: "Expands an approved idea into a slide-by-slide carousel structure plus caption.",
   accepts: "one idea note",
+  hint: "Ideas are the violet cards Generate idea + hooks produces — approve one there first, then wire it in.",
   promptFile: "carousel-builder.md",
   systemFiles: ["content", "visual"],
   schema: CarouselOutput,

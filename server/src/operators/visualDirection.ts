@@ -28,6 +28,7 @@ export const visualDirectionOperator: Operator<VisualDirectionPayload> = {
   description:
     "Turns an idea + visual references into a design brief mapped to a Figma template.",
   accepts: "one idea + visual references (wire refs in, or it uses your latest saved ones)",
+  hint: "Ideas are the violet cards Generate idea + hooks produces — approve one there first.",
   promptFile: "visual-direction.md",
   systemFiles: ["visual"],
   schema: VisualDirectionOutput,

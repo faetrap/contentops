@@ -4,6 +4,8 @@ import type { OperatorInfo } from "../api";
 export interface OperatorNodeData {
   operator: OperatorInfo;
   feedCount: number;
+  /** null = no wire being dragged; true/false = can this machine eat the dragged card. */
+  eligible: boolean | null;
   running: boolean;
   anyRunning: boolean;
   onRun: (operatorName: string) => void;
@@ -23,9 +25,10 @@ const OP_ICON: Record<string, string> = {
  * card's right edge into this node's left edge, then press Run.
  */
 export function OperatorNode({ data }: NodeProps) {
-  const { operator, feedCount, running, anyRunning, onRun } = data as OperatorNodeData;
+  const { operator, feedCount, eligible, running, anyRunning, onRun } = data as OperatorNodeData;
+  const eatClass = eligible === true ? " can-eat" : eligible === false ? " cant-eat" : "";
   return (
-    <div className={`op-node${running ? " running" : ""}`}>
+    <div className={`op-node${running ? " running" : ""}${eatClass}`}>
       <Handle type="target" position={Position.Left} className="op-handle" />
       <div className="op-head">
         <span className="op-icon">{OP_ICON[operator.name] ?? "⚙️"}</span>

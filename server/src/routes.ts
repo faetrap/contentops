@@ -191,7 +191,7 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     const notes = noteIds.map((id) => vault.findById(id)).filter((n): n is Note => n !== null);
     if (notes.length === 0) return res.status(400).json({ error: "No valid notes given" });
     if (!notes.some((n) => operator.appliesTo(n))) {
-      return res.status(400).json({ error: `This operator needs: ${operator.accepts}` });
+      return res.status(400).json({ error: `This operator needs ${operator.accepts}. ${operator.hint}` });
     }
 
     try {
@@ -275,5 +275,5 @@ function toApiNote(note: Note) {
 }
 
 function toApiOperator(op: Operator<unknown>) {
-  return { name: op.name, label: op.label, description: op.description, accepts: op.accepts };
+  return { name: op.name, label: op.label, description: op.description, accepts: op.accepts, hint: op.hint };
 }

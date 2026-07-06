@@ -13,6 +13,8 @@ export interface Operator<T = unknown> {
   description: string;
   /** Human description of what this operator feeds on, shown on its canvas node. */
   accepts: string;
+  /** How to obtain a valid input — shown when the user wires in the wrong card. */
+  hint: string;
   /** Which notes this operator can run on (the primary input). */
   appliesTo(note: Note): boolean;
   /** Additional note kinds that may be wired in as secondary inputs (e.g. visual refs). */

@@ -20,6 +20,7 @@ export interface OperatorInfo {
   label: string;
   description: string;
   accepts: string;
+  hint: string;
 }
 
 export interface Proposal {

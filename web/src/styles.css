@@ -447,3 +447,18 @@ button.primary { background: var(--accent); }
   width: 100%; border: 1px solid var(--line); border-radius: 8px;
   padding: 9px 12px; font: inherit; background: var(--surface); color: var(--ink);
 }
+
+/* ── Fix: texture belongs on the paper, never over cards/windows ── */
+body::before, body::after { content: none; }
+body {
+  background-color: var(--bg);
+  background-image: var(--speckle), var(--stains);
+  background-size: 320px 320px, 760px 760px;
+}
+.react-flow { background: transparent; }
+.app-main, .scroll-pane { background: transparent; }
+
+/* Drag feedback: machines that can eat the dragged card glow, others fade */
+.op-node.can-eat { box-shadow: 0 0 0 3px rgba(90, 125, 90, 0.45); }
+.op-node.can-eat::after { border-color: var(--green); }
+.op-node.cant-eat { opacity: 0.3; }

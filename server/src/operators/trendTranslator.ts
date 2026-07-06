@@ -19,6 +19,7 @@ export const trendTranslatorOperator: Operator<TrendPayload> = {
   label: "Translate trend",
   description: "Converts an outside trend into an on-pillar, on-voice angle — or tells you to skip it.",
   accepts: "processed trend notes (screenshots or descriptions of what's doing numbers)",
+  hint: "Capture the trend, run Classify, and approve it as type Trend first.",
   promptFile: "trend-translator.md",
   systemFiles: ["content"],
   schema: TrendOutput,

@@ -51,6 +51,8 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
   const [feedVersion, setFeedVersion] = useState(0);
   const flowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
   const framedRef = useRef(false);
+  /** While a wire is being dragged from a card, machines show can-eat/can't-eat. */
+  const [dragNoteId, setDragNoteId] = useState<string | null>(null);
 
   // Callbacks live in a ref so node rebuilds never depend on their identity —
   // unstable callback props were wiping React Flow's node measurements every
@@ -132,6 +134,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         positions.current[id] = pos;
       }
       const feedCount = validFeeds.filter((f) => f.operator === op.name).length;
+      const dragNote = dragNoteId ? notes.find((n) => n.id === dragNoteId) : null;
       return {
         id,
         type: "operator",
@@ -139,6 +142,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         data: {
           operator: op,
           feedCount,
+          eligible: dragNote ? (dragNote.feedable?.includes(op.name) ?? false) : null,
           running: runningOp === op.name,
           anyRunning: runningOp !== null,
           onRun: (name: string) => {
@@ -211,7 +215,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, operators, runningOp, feedVersion, persistFeeds]);
+  }, [notes, operators, runningOp, feedVersion, dragNoteId, persistFeeds]);
 
   useEffect(() => {
     if (ready) rebuild();
@@ -229,7 +233,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
       const op = operators.find((o) => o.name === opName);
       if (!note || !op) return;
       if (!note.feedable?.includes(opName)) {
-        onError(`"${op.label}" doesn't eat this kind of card — it feeds on: ${op.accepts}`);
+        onError(`"${op.label}" doesn't eat this kind of card. ${op.hint}`);
         return;
       }
       if (feedsRef.current.some((f) => f.noteId === note.id && f.operator === opName)) return;
@@ -293,6 +297,10 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         }}
         onNodesChange={handleNodesChange}
         onConnect={onConnect}
+        onConnectStart={(_, params) => {
+          if (params.nodeId && !params.nodeId.startsWith("op:")) setDragNoteId(params.nodeId);
+        }}
+        onConnectEnd={() => setDragNoteId(null)}
         onEdgeClick={onEdgeClick}
         onNodeClick={(_, node) => {
           if (node.type === "note") cbRef.current.onOpen(node.id);
