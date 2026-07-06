@@ -5,6 +5,9 @@ import { loadConfig, WEB_DIST } from "./config.js";
 import { registerOperator } from "./operators/registry.js";
 import { classifierOperator } from "./operators/classifier.js";
 import { ideaHookOperator } from "./operators/ideaHook.js";
+import { trendTranslatorOperator } from "./operators/trendTranslator.js";
+import { visualDirectionOperator } from "./operators/visualDirection.js";
+import { carouselBuilderOperator } from "./operators/carouselBuilder.js";
 import { buildRoutes } from "./routes.js";
 import { Vault } from "./vault.js";
 
@@ -14,6 +17,9 @@ vault.bootstrap();
 
 registerOperator(classifierOperator);
 registerOperator(ideaHookOperator);
+registerOperator(trendTranslatorOperator);
+registerOperator(visualDirectionOperator);
+registerOperator(carouselBuilderOperator);
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));

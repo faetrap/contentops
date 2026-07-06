@@ -18,6 +18,8 @@ const TYPE_ICON: Record<string, string> = {
   personal_reflection: "🌙",
   tarot_chakra_philosophy: "🔮",
   idea: "💡",
+  design_brief: "🎨",
+  carousel_draft: "🃏",
 };
 
 export function NoteNode({ data }: NodeProps) {

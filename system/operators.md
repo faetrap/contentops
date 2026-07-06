@@ -2,7 +2,7 @@
 
 > The operator library. Each operator is a single-purpose module: **input → process → output**, with the creator as the review operator. This file is the human-readable spec; the running app (`server/src/operators/`) is the implementation. Keep them in sync.
 >
-> **Alignment note for Fable 5:** operators marked `[BUILT]` exist in code today. Every operator must load `content.md` + `visual.md` as context so strategy lives in one place, not in each prompt.
+> **Alignment note for Fable 5:** operators marked `[BUILT]` exist in code today — as of 2026-07-06 all first-5 are built. Every operator must load `content.md` + `visual.md` as context so strategy lives in one place, not in each prompt.
 
 ---
 
@@ -43,7 +43,7 @@ Copy this block to define any new operator.
 - **When to use:** when a processed input has a real idea in it.
 - **How to review:** Do the hooks sound like *her*, out loud? Kill any that smell like AI (see Anti-Drift). Keep 2–3, bin the rest.
 
-### 3. Trend Translator   `[PLANNED — build next]`
+### 3. Trend Translator   `[BUILT]`
 - **Purpose:** Convert an outside trend/format into an on-pillar, on-voice angle (so we ride trends without becoming generic).
 - **Inputs:** a `trend` note (a screenshot or description of a format/sound/topic doing numbers).
 - **Process:** identify the trend's mechanic → map it to the nearest pillar → propose how *we* would do it without betraying the voice, or reject it as off-brand.
@@ -52,7 +52,7 @@ Copy this block to define any new operator.
 - **When to use:** weekly, on saved trend screenshots.
 - **How to review:** Trust the "skip." If our take needs us to abandon the voice to work, skip it.
 
-### 4. Visual Direction   `[PLANNED — Phase 2/3]`
+### 4. Visual Direction   `[BUILT]`
 - **Purpose:** Turn an idea + visual references into a design brief mapped to a Figma template (reads `visual.md`).
 - **Inputs:** an `idea` note + one or more `visual_reference` notes (with images).
 - **Process:** extract design DNA from refs (`visual.md` §9) → choose dialect + mood → write per-slide visual direction → name the Figma template.
@@ -61,7 +61,7 @@ Copy this block to define any new operator.
 - **When to use:** once an idea is approved and heading to design.
 - **How to review:** Is it *translating* the reference, not cloning it? One mood only? Does it map to a real template?
 
-### 5. Carousel Builder   `[PLANNED — Phase 2]`
+### 5. Carousel Builder   `[BUILT]`
 - **Purpose:** Expand an approved idea into a slide-by-slide carousel structure + caption.
 - **Inputs:** an approved `idea` note (+ optional design brief).
 - **Process:** hook slide → one thought per interior slide → landing slide (the turn) → caption. Obeys `content.md` format rules.

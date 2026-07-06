@@ -11,6 +11,8 @@ const TYPES = [
   "personal_reflection",
   "tarot_chakra_philosophy",
   "idea",
+  "design_brief",
+  "carousel_draft",
 ];
 const STATUSES = ["", "raw", "processed", "idea", "draft", "approved", "posted", "archived"];
 
