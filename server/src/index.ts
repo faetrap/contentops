@@ -22,6 +22,10 @@ registerOperator(visualDirectionOperator);
 registerOperator(carouselBuilderOperator);
 
 const app = express();
+app.use((req, _res, next) => {
+  console.log(`${new Date().toISOString().slice(11, 19)} ${req.method} ${req.path}`);
+  next();
+});
 app.use(express.json({ limit: "2mb" }));
 app.use("/api", buildRoutes(vault, config));
 

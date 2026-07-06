@@ -50,14 +50,26 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
   const [feedVersion, setFeedVersion] = useState(0);
 
   useEffect(() => {
-    Promise.all([api.layout(), api.operators()])
-      .then(([state, ops]) => {
-        positions.current = state.positions;
-        feedsRef.current = state.feeds;
-        setOperators(ops);
-      })
-      .catch((e) => onError(e.message))
-      .finally(() => setReady(true));
+    let alive = true;
+    let timer: number | undefined;
+    const load = () =>
+      Promise.all([api.layout(), api.operators()])
+        .then(([state, ops]) => {
+          if (!alive) return;
+          positions.current = state.positions;
+          feedsRef.current = state.feeds;
+          setOperators(ops);
+          setReady(true);
+        })
+        .catch(() => {
+          // Server may be mid-restart — keep trying until the machines appear.
+          if (alive) timer = window.setTimeout(load, 2500);
+        });
+    load();
+    return () => {
+      alive = false;
+      if (timer) window.clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -237,6 +249,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         </span>
       </div>
       <ReactFlow
+        key={nodes.length > 0 ? "loaded" : "empty"}
         nodes={nodes}
         edges={edges}
         onNodesChange={handleNodesChange}

@@ -25,7 +25,32 @@ export default function App() {
     api.notes().then(setNotes).catch((e) => showToast({ text: e.message, error: true }));
   }, []);
 
-  useEffect(refresh, [refresh]);
+  // Self-healing data: retry quickly while empty (e.g. server was restarting),
+  // refetch when the tab regains focus, and keep a slow background sync.
+  useEffect(() => {
+    let alive = true;
+    let empty = true;
+    const load = () =>
+      api
+        .notes()
+        .then((n) => {
+          if (!alive) return;
+          setNotes(n);
+          empty = false;
+        })
+        .catch(() => {});
+    load();
+    const fast = setInterval(() => empty && load(), 3000);
+    const slow = setInterval(load, 20000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      alive = false;
+      clearInterval(fast);
+      clearInterval(slow);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   function showToast(t: Toast) {
     setToast(t);
