@@ -7,7 +7,19 @@ import type { AppConfig } from "./config.js";
 import { allOperators, feedableOperators, getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
 import { antiDriftRule, systemContext } from "./system.js";
 import { LayoutStore } from "./layout.js";
+import { WEB_DIST } from "./config.js";
 import { FOLDERS, type Note, type Vault } from "./vault.js";
+import fs from "node:fs";
+import path from "node:path";
+
+/** The currently-built frontend bundle name — lets tabs detect they're stale. */
+function currentBundle(): string | null {
+  try {
+    return fs.readdirSync(path.join(WEB_DIST, "assets")).find((f) => f.startsWith("index-") && f.endsWith(".js")) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 interface Proposal {
   id: string;
@@ -40,6 +52,7 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
       vaultOk: true,
       claudeCli: cliInstalled ? cliVersion : null,
       model: config.model,
+      bundle: currentBundle(),
     });
   });
 

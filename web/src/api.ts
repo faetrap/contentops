@@ -35,6 +35,7 @@ export interface Health {
   vaultOk: boolean;
   claudeCli: string | null;
   model: string;
+  bundle?: string | null;
 }
 
 async function handle<T>(res: Response): Promise<T> {

@@ -20,6 +20,7 @@ export default function App() {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [runningOp, setRunningOp] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [pulse, setPulse] = useState<{ cards: number; at: string } | null>(null);
 
   const refresh = useCallback(() => {
     api.notes().then(setNotes).catch((e) => showToast({ text: e.message, error: true }));
@@ -36,9 +37,12 @@ export default function App() {
         .then((n) => {
           if (!alive) return;
           setNotes(n);
+          setPulse({ cards: n.length, at: new Date().toLocaleTimeString() });
           empty = false;
         })
-        .catch(() => {});
+        .catch(() => {
+          if (alive) setPulse(null);
+        });
     load();
     const fast = setInterval(() => empty && load(), 3000);
     const slow = setInterval(load, 20000);
@@ -50,6 +54,25 @@ export default function App() {
       clearInterval(slow);
       window.removeEventListener("focus", onFocus);
     };
+  }, []);
+
+  // Stale-tab self-destruct: if the server is serving a newer app than this
+  // tab is running, reload to pick it up. Old tabs can never linger again.
+  useEffect(() => {
+    const myBundle = (document.querySelector('script[src*="assets/index-"]') as HTMLScriptElement | null)?.src
+      .split("/")
+      .pop();
+    if (!myBundle) return;
+    const check = () =>
+      api
+        .health()
+        .then((h) => {
+          if (h.bundle && h.bundle !== myBundle) window.location.reload();
+        })
+        .catch(() => {});
+    check();
+    const t = setInterval(check, 15000);
+    return () => clearInterval(t);
   }, []);
 
   function showToast(t: Toast) {
@@ -94,6 +117,9 @@ export default function App() {
         <h1>
           Flow Fae <span>· ContentOps</span>
         </h1>
+        <span className={`pulse${pulse ? "" : " dead"}`} title="Live connection to your vault — if this isn't ticking, close the tab and open a fresh one">
+          {pulse ? `● live · ${pulse.cards} cards · ${pulse.at}` : "○ connecting…"}
+        </span>
         <nav className="tabs">
           <button className={tab === "canvas" ? "active" : ""} onClick={() => setTab("canvas")}>
             Canvas

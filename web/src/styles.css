@@ -266,3 +266,12 @@ button.primary:hover:not(:disabled) { filter: brightness(1.08); }
 .wire-prod { border-top: 2.5px solid #7a68a6; }
 .wire-lin { border-top: 2px dashed #cbbfa8; }
 @media (max-width: 900px) { .legend-wires { display: none; } }
+
+.pulse {
+  font-size: 12px; font-weight: 600; color: var(--green);
+  background: #eef3ee; border: 1px solid #d5e2d5; border-radius: 99px;
+  padding: 3px 12px; margin-left: 14px;
+}
+.pulse.dead { color: var(--red); background: #f7ece9; border-color: #ead5cf; }
+header.app { gap: 10px; }
+header.app h1 { white-space: nowrap; }

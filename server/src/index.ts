@@ -30,8 +30,18 @@ app.use(express.json({ limit: "2mb" }));
 app.use("/api", buildRoutes(vault, config));
 
 if (fs.existsSync(WEB_DIST)) {
-  app.use(express.static(WEB_DIST));
-  app.get("*", (_req, res) => res.sendFile(`${WEB_DIST}/index.html`));
+  // HTML must never be cached — a cached index.html pins a tab to a dead bundle.
+  app.use(
+    express.static(WEB_DIST, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".html")) res.setHeader("Cache-Control", "no-store");
+      },
+    })
+  );
+  app.get("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.sendFile(`${WEB_DIST}/index.html`);
+  });
 }
 
 app.listen(config.port, () => {
