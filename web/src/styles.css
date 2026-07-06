@@ -21,11 +21,15 @@ body {
   line-height: 1.55;
 }
 
-#root { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+#root { height: 100vh; }
+
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.app-main { flex: 1; min-height: 0; position: relative; }
+.scroll-pane { height: 100%; overflow-y: auto; max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
 
 header.app {
   display: flex; align-items: baseline; justify-content: space-between;
-  padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--line);
+  padding: 16px 22px; border-bottom: 1px solid var(--line); background: var(--surface);
 }
 header.app h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.02em; }
 header.app h1 span { color: var(--accent); }
@@ -130,3 +134,56 @@ button.primary:hover:not(:disabled) { filter: brightness(1.08); }
 .kv b { min-width: 110px; color: var(--ink-soft); font-weight: 600; }
 .ok { color: var(--green); font-weight: 700; }
 .bad { color: var(--red); font-weight: 700; }
+
+/* ── Canvas ─────────────────────────────────────────── */
+.canvas-wrap { position: absolute; inset: 0; }
+.react-flow { background: var(--bg); }
+
+.capture-bar {
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 5; width: min(680px, calc(100% - 32px));
+  display: flex; gap: 8px; align-items: flex-end;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 10px; box-shadow: 0 6px 24px rgba(45,42,38,0.08);
+}
+.capture-bar.over { border-color: var(--accent); background: var(--accent-soft); }
+.capture-bar textarea { flex: 1; border: none; padding: 8px 6px; min-height: 24px; box-shadow: none; }
+.capture-bar textarea:focus { outline: none; }
+.capture-bar button { flex-shrink: 0; }
+
+.canvas-empty {
+  position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 4; max-width: 460px; text-align: center; color: var(--ink-soft);
+  font-size: 14px; line-height: 1.6; padding: 0 16px;
+}
+
+/* Node cards */
+.node {
+  width: 240px; background: var(--surface); border: 1px solid var(--line);
+  border-left: 4px solid var(--accent); border-radius: 12px; padding: 12px 13px;
+  box-shadow: 0 3px 12px rgba(45,42,38,0.07); cursor: grab; font-size: 13px;
+}
+.node:active { cursor: grabbing; }
+.node.raw { border-left-color: #c9a15a; }
+.node.processed { border-left-color: var(--green); }
+.node.idea { border-left-color: #7a68a6; }
+.node.draft { border-left-color: var(--accent); }
+
+.node-head { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+.node-icon { font-size: 14px; }
+.node-type { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); flex: 1; }
+.node-thumb { width: 100%; height: 96px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--line); }
+.node-title { font-size: 13.5px; line-height: 1.45; color: var(--ink); max-height: 84px; overflow: hidden; }
+
+.node-ops { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+.node-op {
+  font: inherit; font-size: 12px; font-weight: 600; text-align: left;
+  border: 1px solid var(--line); background: var(--accent-soft); color: var(--accent);
+  border-radius: 7px; padding: 6px 9px; cursor: pointer;
+}
+.node-op:hover:not(:disabled) { background: var(--accent); color: #fff; }
+.node-op:disabled { opacity: 0.5; cursor: default; }
+.node-handle { width: 7px; height: 7px; background: #cbbfa8; border: none; }
+
+.react-flow__controls { box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+.react-flow__controls button { background: var(--surface); border-bottom: 1px solid var(--line); }

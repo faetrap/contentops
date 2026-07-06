@@ -40,10 +40,19 @@ async function handle<T>(res: Response): Promise<T> {
   return data as T;
 }
 
+export type Layout = Record<string, { x: number; y: number }>;
+
 export const api = {
   health: () => fetch("/api/health").then((r) => handle<Health>(r)),
   notes: (params: Record<string, string> = {}) =>
     fetch(`/api/notes?${new URLSearchParams(params)}`).then((r) => handle<ApiNote[]>(r)),
+  layout: () => fetch("/api/layout").then((r) => handle<Layout>(r)),
+  saveLayout: (positions: Layout) =>
+    fetch("/api/layout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ positions }),
+    }).then((r) => handle<Layout>(r)),
   note: (id: string) => fetch(`/api/notes/${id}`).then((r) => handle<ApiNote>(r)),
   capture: (text: string, image: File | null) => {
     const form = new FormData();

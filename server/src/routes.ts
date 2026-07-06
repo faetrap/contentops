@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { ClaudeAuthError, ClaudeOutputError, runClaudeJSON } from "./claude.js";
 import type { AppConfig } from "./config.js";
 import { getOperator, operatorsForNote, type Operator } from "./operators/registry.js";
+import { LayoutStore } from "./layout.js";
 import { FOLDERS, type Note, type Vault } from "./vault.js";
 
 interface Proposal {
@@ -22,6 +23,7 @@ const proposals = new Map<string, Proposal>();
 export function buildRoutes(vault: Vault, config: AppConfig): Router {
   const router = express.Router();
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+  const layout = new LayoutStore(vault);
 
   router.get("/health", (_req, res) => {
     let cliInstalled = false;
@@ -46,7 +48,17 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     if (type) notes = notes.filter((n) => n.frontmatter.type === type);
     if (status) notes = notes.filter((n) => n.frontmatter.status === status);
     if (folder) notes = notes.filter((n) => n.relPath.startsWith(folder));
-    res.json(notes.map(toApiNote));
+    res.json(notes.map((n) => ({ ...toApiNote(n), operators: operatorsForNote(n).map(toApiOperator) })));
+  });
+
+  router.get("/layout", (_req, res) => res.json(layout.read()));
+
+  router.post("/layout", (req, res) => {
+    const positions = req.body?.positions;
+    if (!positions || typeof positions !== "object") {
+      return res.status(400).json({ error: "positions object required" });
+    }
+    res.json(layout.merge(positions));
   });
 
   router.get("/notes/:id", (req, res) => {

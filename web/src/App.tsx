@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type ApiNote, type Proposal } from "./api";
-import { Capture } from "./components/Capture";
+import { Canvas } from "./components/Canvas";
 import { Library } from "./components/Library";
 import { NoteDetail } from "./components/NoteDetail";
 import { ReviewModal } from "./components/ReviewModal";
 import { Settings } from "./components/Settings";
 
-type Tab = "inbox" | "library" | "settings";
+type Tab = "canvas" | "list" | "settings";
 
 export interface Toast {
   text: string;
@@ -14,7 +14,7 @@ export interface Toast {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("inbox");
+  const [tab, setTab] = useState<Tab>("canvas");
   const [notes, setNotes] = useState<ApiNote[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -32,17 +32,16 @@ export default function App() {
     setTimeout(() => setToast(null), t.error ? 6000 : 3000);
   }
 
-  async function runOperator(name: string, noteIds: string[]) {
+  const runOperator = useCallback(async (name: string, noteId: string) => {
     setRunningOp(name);
     try {
-      const p = await api.runOperator(name, noteIds);
-      setProposal(p);
+      setProposal(await api.runOperator(name, [noteId]));
     } catch (e) {
       showToast({ text: (e as Error).message, error: true });
     } finally {
       setRunningOp(null);
     }
-  }
+  }, []);
 
   async function approveProposal(payload?: Record<string, unknown>) {
     if (!proposal) return;
@@ -64,21 +63,18 @@ export default function App() {
     showToast({ text: "Rejected — nothing was written." });
   }
 
-  const inboxNotes = notes.filter((n) => n.relPath.startsWith("00 Inbox"));
-  const selected = notes.find((n) => n.id === selectedId) ?? null;
-
   return (
-    <>
+    <div className="app-shell">
       <header className="app">
         <h1>
           Flow Fae <span>· ContentOps</span>
         </h1>
         <nav className="tabs">
-          <button className={tab === "inbox" ? "active" : ""} onClick={() => setTab("inbox")}>
-            Inbox {inboxNotes.length > 0 && `(${inboxNotes.length})`}
+          <button className={tab === "canvas" ? "active" : ""} onClick={() => setTab("canvas")}>
+            Canvas
           </button>
-          <button className={tab === "library" ? "active" : ""} onClick={() => setTab("library")}>
-            Library
+          <button className={tab === "list" ? "active" : ""} onClick={() => setTab("list")}>
+            List
           </button>
           <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>
             Settings
@@ -86,27 +82,37 @@ export default function App() {
         </nav>
       </header>
 
-      {tab === "inbox" && (
-        <Capture
-          inboxNotes={inboxNotes}
-          onCaptured={() => {
-            refresh();
-            showToast({ text: "Captured to Inbox." });
-          }}
-          onError={(m) => showToast({ text: m, error: true })}
-          onSelect={setSelectedId}
-          onClassify={(id) => runOperator("input-classifier", [id])}
-          runningOp={runningOp}
-        />
-      )}
-      {tab === "library" && <Library notes={notes} onSelect={setSelectedId} />}
-      {tab === "settings" && <Settings />}
+      <main className="app-main">
+        {tab === "canvas" && (
+          <Canvas
+            notes={notes}
+            runningOp={runningOp}
+            onRun={runOperator}
+            onOpen={setSelectedId}
+            onCaptured={() => {
+              refresh();
+              showToast({ text: "Captured to your board." });
+            }}
+            onError={(m) => showToast({ text: m, error: true })}
+          />
+        )}
+        {tab === "list" && (
+          <div className="scroll-pane">
+            <Library notes={notes} onSelect={setSelectedId} />
+          </div>
+        )}
+        {tab === "settings" && (
+          <div className="scroll-pane">
+            <Settings />
+          </div>
+        )}
+      </main>
 
-      {selected && (
+      {selectedId && (
         <NoteDetail
-          noteId={selected.id}
+          noteId={selectedId}
           onClose={() => setSelectedId(null)}
-          onRunOperator={runOperator}
+          onRunOperator={(name, ids) => runOperator(name, ids[0])}
           runningOp={runningOp}
         />
       )}
@@ -116,6 +122,6 @@ export default function App() {
       )}
 
       {toast && <div className={`toast${toast.error ? " error" : ""}`}>{toast.text}</div>}
-    </>
+    </div>
   );
 }
