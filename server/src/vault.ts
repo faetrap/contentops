@@ -232,6 +232,16 @@ Rules:
 - "usefulness_score": 1 = vague noise, 5 = immediately usable for content.
 - "summary" is one plain sentence describing the input.
 - Choose "type" from exactly: visual_reference, hook, trend, yoga_note, personal_reflection, tarot_chakra_philosophy.
+
+THE SORTING QUESTION — for screenshots of other people's content, decide type by
+asking "why was this worth saving?":
+- Saved for how it LOOKS (a layout/style/design language to translate) → visual_reference.
+- Saved for what it SAYS (a quotable line, a reframe, an idea) → hook — or yoga_note /
+  tarot_chakra_philosophy if it's a longer thought. The image is just packaging; say so
+  in the summary.
+- Saved because the FORMAT is doing numbers → trend.
+Type decides only where it's filed. The tags (aesthetic, mood, themes) carry every
+other nature of the input — tag those fully regardless of type.
 `,
   "trend-translator.md": `---
 operator: trend-translator

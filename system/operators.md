@@ -33,6 +33,7 @@ Copy this block to define any new operator.
 - **Example prompt:** *"Classify this captured input. Choose type from: visual_reference, hook, trend, yoga_note, personal_reflection, tarot_chakra_philosophy. Return {type, pillar, aesthetic[], mood[], usefulness_score 1-5, summary}."*
 - **When to use:** immediately on every capture, before anything else.
 - **How to review:** Is the pillar right? Is the usefulness score honest (a 2 is allowed — not everything is gold)? Fix the tag, then approve.
+- **The sorting question** (for ambiguous screenshots): *why was this worth saving?* Looks → visual_reference. Says → hook (or a note type). Format doing numbers → trend. Type only decides the folder; the tags (aesthetic/mood/themes) carry every other nature and are how you'll find it again.
 
 ### 2. Idea + Hook   `[BUILT]`
 - **Purpose:** Turn processed input(s) into one content angle + 10 hooks in the creator's voice.
