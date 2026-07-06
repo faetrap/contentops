@@ -251,7 +251,16 @@ export function buildRoutes(vault: Vault, config: AppConfig): Router {
     try {
       const result = operator.apply(payload, notes, vault);
       proposals.delete(proposal.id);
-      res.json(result);
+      // A run EATS its feed-wires: unplug the consumed cards from this machine
+      // so the next run never silently reuses stale inputs.
+      const consumed = new Set(result.consumed ?? proposal.sourceNoteIds);
+      const state = layout.read();
+      layout.update({
+        feeds: state.feeds.filter(
+          (f) => !(f.operator === proposal.operatorName && consumed.has(f.noteId))
+        ),
+      });
+      res.json({ effectSummary: result.effectSummary });
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
     }

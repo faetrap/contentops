@@ -30,7 +30,11 @@ export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved,
   }, [noteId]);
 
   const images = note ? [...note.body.matchAll(/!\[\[([^\]]+)\]\]/g)].map((m) => m[1]) : [];
-  const textBody = note?.body.replace(/!\[\[[^\]]+\]\]/g, "").trim() ?? "";
+  const textBody =
+    note?.body
+      .replace(/!\[\[[^\]]+\]\]/g, "")
+      .replace(/^#+\s+/gm, "") // headings render as plain section titles, not raw ##
+      .trim() ?? "";
   const hasSummary = note ? note.frontmatter.summary !== undefined : false;
 
   async function save() {
@@ -62,9 +66,11 @@ export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved,
               <span className={`badge ${note.frontmatter.status}`}>
                 {note.frontmatter.status.charAt(0).toUpperCase() + note.frontmatter.status.slice(1)}
               </span>
-              <span className="badge badge-type">
-                {(note.frontmatter.type.charAt(0).toUpperCase() + note.frontmatter.type.slice(1)).replaceAll("_", " ")}
-              </span>
+              {note.frontmatter.type !== note.frontmatter.status && (
+                <span className="badge badge-type">
+                  {(note.frontmatter.type.charAt(0).toUpperCase() + note.frontmatter.type.slice(1)).replaceAll("_", " ")}
+                </span>
+              )}
               {typeof note.frontmatter.pillar === "string" && note.frontmatter.pillar && (
                 <span className="badge">{note.frontmatter.pillar}</span>
               )}
@@ -73,6 +79,11 @@ export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved,
             {images.map((img) => (
               <img key={img} className="detail-img" src={assetUrl(img)} alt="" />
             ))}
+            {(note.operators ?? []).length > 0 && (
+              <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 14, textAlign: "right" }}>
+                These buttons run on this card only — wires on the board aren't included.
+              </p>
+            )}
             <div className="actions">
               <button className="ghost" onClick={onClose}>
                 Close

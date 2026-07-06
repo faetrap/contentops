@@ -5,6 +5,8 @@ import type { Note, Vault } from "../vault.js";
 export interface OperatorResult {
   /** Human-readable description of what approving will do. */
   effectSummary: string;
+  /** Note ids whose feed-wires were used up by this run (defaults to all sources). */
+  consumed?: string[];
 }
 
 export interface Operator<T = unknown> {

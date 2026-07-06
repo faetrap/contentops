@@ -90,6 +90,7 @@ export const trendTranslatorOperator: Operator<TrendPayload> = {
         pillar: payload.best_pillar,
         source: "trend-translator operator",
         suggested_format: payload.format,
+        summary: payload.our_take.slice(0, 140),
         links: [link],
       },
       body

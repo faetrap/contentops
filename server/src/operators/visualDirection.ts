@@ -112,6 +112,7 @@ export const visualDirectionOperator: Operator<VisualDirectionPayload> = {
         dialect: payload.dialect,
         mood: payload.mood,
         figma_template: payload.figma_template,
+        summary: `Design brief · ${payload.dialect} / ${payload.mood.replaceAll("_", " ")} → ${payload.figma_template}`,
         links,
       },
       body

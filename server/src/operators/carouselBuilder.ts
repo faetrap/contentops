@@ -87,6 +87,7 @@ export const carouselBuilderOperator: Operator<CarouselPayload> = {
         source: "carousel-builder operator",
         recommended_template: payload.recommended_template,
         slide_count: payload.slides.length,
+        summary: `${payload.slides.length} slides · ${payload.slides[0]?.text.slice(0, 100) ?? ""}`,
         links: [link],
       },
       body

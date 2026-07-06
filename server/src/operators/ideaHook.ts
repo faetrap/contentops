@@ -78,6 +78,7 @@ export const ideaHookOperator: Operator<IdeaHookPayload> = {
         pillar: payload.pillar,
         source: "idea-hook operator",
         suggested_format: payload.suggested_format,
+        summary: payload.angle.slice(0, 140),
         links,
       },
       body

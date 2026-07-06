@@ -2,7 +2,7 @@ import path from "node:path";
 import { z } from "zod";
 import { loadPillars, loadTagVocab } from "../system.js";
 import { FOLDERS, TYPE_TO_FOLDER, type Note, type Vault } from "../vault.js";
-import { imageEmbeds, type Operator } from "./registry.js";
+import { imageEmbeds, type Operator, type OperatorResult } from "./registry.js";
 
 const ClassifierOutput = z.object({
   type: z.enum([
@@ -71,7 +71,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
     return `Tag "${path.basename(sourceNotes[0].relPath)}" as ${payload.type} and move it to ${folder}/`;
   },
 
-  apply(payload, sourceNotes, vault): { effectSummary: string } {
+  apply(payload, sourceNotes, vault): OperatorResult {
     const note = sourceNotes.find((n) => n.frontmatter.status === "raw") ?? sourceNotes[0];
     const subfolder = TYPE_TO_FOLDER[payload.type] ?? "Personal Reflections";
     const targetFolder = path.join(FOLDERS.inputs, subfolder);
@@ -91,6 +91,7 @@ export const classifierOperator: Operator<ClassifierPayload> = {
       note.body
     );
     const newPath = vault.moveNote(note.relPath, targetFolder);
-    return { effectSummary: `Filed as ${payload.type} → ${newPath}` };
+    // Only this card's wire is used up — other raw cards stay plugged in.
+    return { effectSummary: `Filed as ${payload.type} → ${newPath}`, consumed: [note.frontmatter.id] };
   },
 };

@@ -84,6 +84,23 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-sync feed wires whenever notes change — the server eats wires on
+  // approve, and this keeps the board's wiring truthful after every run.
+  useEffect(() => {
+    if (!ready) return;
+    api
+      .layout()
+      .then((s) => {
+        const changed = JSON.stringify(s.feeds) !== JSON.stringify(feedsRef.current);
+        if (changed) {
+          feedsRef.current = s.feeds;
+          setFeedVersion((v) => v + 1);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, ready]);
+
   const persistFeeds = useCallback((feeds: Feed[]) => {
     feedsRef.current = feeds;
     setFeedVersion((v) => v + 1);
