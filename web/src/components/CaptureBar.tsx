@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 
 interface Props {
@@ -12,7 +12,25 @@ export function CaptureBar({ onCaptured, onError }: Props) {
   const [image, setImage] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [flash, setFlash] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // Paste a photo anywhere on the board (⌘V) and it attaches here.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith("image/"));
+      if (!item) return; // plain text pastes stay untouched
+      const file = item.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+      const named = new File([file], file.name || `pasted-${Date.now()}.png`, { type: file.type });
+      setImage(named);
+      setFlash(true);
+      setTimeout(() => setFlash(false), 900);
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
 
   async function submit() {
     if (!text.trim() && !image) return;
@@ -31,7 +49,7 @@ export function CaptureBar({ onCaptured, onError }: Props) {
 
   return (
     <div
-      className={`capture-bar${dragOver ? " over" : ""}`}
+      className={`capture-bar${dragOver || flash ? " over" : ""}`}
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -46,7 +64,7 @@ export function CaptureBar({ onCaptured, onError }: Props) {
     >
       <textarea
         rows={1}
-        placeholder="Drop a thought, a hook, a line from class…  (or drag a screenshot here)"
+        placeholder="Drop a thought, a hook, a line from class…  (paste ⌘V or drag a screenshot)"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
