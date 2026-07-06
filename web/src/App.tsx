@@ -118,7 +118,7 @@ export default function App() {
           Flow Fae <span>· ContentOps</span>
         </h1>
         <span className={`pulse${pulse ? "" : " dead"}`} title="Live connection to your vault — if this isn't ticking, close the tab and open a fresh one">
-          {pulse ? `● live · ${pulse.cards} cards · ${pulse.at}` : "○ connecting…"}
+          {pulse ? `● Live · ${pulse.cards} cards · ${pulse.at}` : "○ Connecting…"}
         </span>
         <nav className="tabs">
           <button className={tab === "canvas" ? "active" : ""} onClick={() => setTab("canvas")}>

@@ -31,7 +31,7 @@ export function OperatorNode({ data }: NodeProps) {
         <span className="op-icon">{OP_ICON[operator.name] ?? "⚙️"}</span>
         <span className="op-name">{operator.label}</span>
       </div>
-      <div className="op-accepts">feeds on: {operator.accepts}</div>
+      <div className="op-accepts">Feeds on: {operator.accepts}</div>
       <button
         className="op-run"
         disabled={anyRunning || feedCount === 0}

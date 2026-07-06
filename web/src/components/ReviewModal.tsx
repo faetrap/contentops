@@ -23,12 +23,18 @@ export function ReviewModal({ proposal, onApprove, onReject }: Props) {
   return (
     <div className="overlay">
       <div className="modal">
-        <h2>Review · {proposal.operatorName.replaceAll("-", " ")}</h2>
+        <h2>
+          Review ·{" "}
+          {(() => {
+            const t = proposal.operatorName.replaceAll("-", " ");
+            return t.charAt(0).toUpperCase() + t.slice(1);
+          })()}
+        </h2>
         <p className="effect">On approve: {proposal.effectPreview}</p>
 
         {Object.entries(payload).map(([key, value]) => (
           <div className="field" key={key}>
-            <label>{key.replaceAll("_", " ")}</label>
+            <label>{(key.charAt(0).toUpperCase() + key.slice(1)).replaceAll("_", " ")}</label>
             {Array.isArray(value) ? (
               <ul className="hook-list">
                 {(value as unknown[]).map((item, i) => (

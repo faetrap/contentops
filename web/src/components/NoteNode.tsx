@@ -25,6 +25,11 @@ const TYPE_ICON: Record<string, string> = {
 /** Output types are products of operators — tinted violet on the board. */
 const OUTPUT_TYPES = new Set(["idea", "design_brief", "carousel_draft", "reel_draft", "caption_draft"]);
 
+const pretty = (s: string) => {
+  const t = s.replaceAll("_", " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
 export function NoteNode({ data }: NodeProps) {
   const { note, onOpen, onEdit, onArchive } = data as NoteNodeData;
   const fm = note.frontmatter;
@@ -45,8 +50,8 @@ export function NoteNode({ data }: NodeProps) {
     >
       <div className="node-head">
         <span className="node-icon">{TYPE_ICON[fm.type] ?? "•"}</span>
-        <span className="node-type">{fm.type.replaceAll("_", " ")}</span>
-        <span className={`badge ${fm.status}`}>{fm.status}</span>
+        <span className="node-type">{pretty(fm.type)}</span>
+        <span className={`badge ${fm.status}`}>{pretty(fm.status)}</span>
         <button
           className="node-act"
           title="Edit this note"

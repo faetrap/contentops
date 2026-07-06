@@ -59,8 +59,12 @@ export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved,
             <h2>{(note.frontmatter.summary as string) || textBody.split("\n")[0]?.slice(0, 70) || "Note"}</h2>
             <p className="effect">{note.relPath}</p>
             <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-              <span className={`badge ${note.frontmatter.status}`}>{note.frontmatter.status}</span>
-              <span className="badge">{note.frontmatter.type.replaceAll("_", " ")}</span>
+              <span className={`badge ${note.frontmatter.status}`}>
+                {note.frontmatter.status.charAt(0).toUpperCase() + note.frontmatter.status.slice(1)}
+              </span>
+              <span className="badge badge-type">
+                {(note.frontmatter.type.charAt(0).toUpperCase() + note.frontmatter.type.slice(1)).replaceAll("_", " ")}
+              </span>
               {typeof note.frontmatter.pillar === "string" && note.frontmatter.pillar && (
                 <span className="badge">{note.frontmatter.pillar}</span>
               )}
@@ -97,12 +101,12 @@ export function NoteDetail({ noteId, onClose, onRunOperator, runningOp, onSaved,
             <p className="effect">{note.relPath} — saves straight into your Obsidian vault</p>
             {hasSummary && (
               <div className="field">
-                <label>summary (shown on the card)</label>
+                <label>Summary (shown on the card)</label>
                 <input type="text" value={draftSummary} onChange={(e) => setDraftSummary(e.target.value)} />
               </div>
             )}
             <div className="field">
-              <label>note text</label>
+              <label>Note text</label>
               <textarea rows={8} value={draftBody} onChange={(e) => setDraftBody(e.target.value)} />
               {images.length > 0 && (
                 <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>

@@ -276,12 +276,12 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
     <div className="canvas-wrap">
       <CaptureBar onCaptured={onCaptured} onError={onError} />
       <div className="canvas-legend">
-        <span><i className="dot dot-input" /> inspiration</span>
-        <span><i className="dot dot-op" /> operator</span>
-        <span><i className="dot dot-output" /> output</span>
+        <span><i className="dot dot-input" /> Inspiration</span>
+        <span><i className="dot dot-op" /> Operator</span>
+        <span><i className="dot dot-output" /> Output</span>
         <span className="legend-wires">
-          <i className="wire wire-feed" /> plugged in · <i className="wire wire-prod" /> made by ·{" "}
-          <i className="wire wire-lin" /> came from
+          <i className="wire wire-feed" /> Plugged in · <i className="wire wire-prod" /> Made by ·{" "}
+          <i className="wire wire-lin" /> Came from
         </span>
       </div>
       <ReactFlow
@@ -302,7 +302,7 @@ export function Canvas({ notes: allNotes, runningOp, onRun, onOpen, onEdit, onAr
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#e2d8c8" />
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="#ece3d3" />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>
